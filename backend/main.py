@@ -3,6 +3,12 @@ import json
 import re
 import io
 import datetime
+import sys
+import pytesseract
+
+if sys.platform.startswith('win'):
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
 from typing import List, Optional
 
 from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends, Header, status
