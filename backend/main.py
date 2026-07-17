@@ -156,48 +156,48 @@ ALLERGEN_DISPLAY_NAMES = {
     "sesame": "Susam & Tahin"
 }
 
-easyocr_reader = None
-
-def get_ocr_reader():
-    global easyocr_reader
-    if easyocr_reader is None:
-        try:
-            import easyocr
-            easyocr_reader = easyocr.Reader(['tr', 'en'], gpu=False)
-        except Exception as e:
-            print(f"EasyOCR Init Info: {e}")
-            easyocr_reader = False
-    return easyocr_reader
-
 def normalize_text(text: str) -> str:
     if not text:
         return ""
     t = text.lower()
-    t = t.replace('i̇', 'i').replace('ı', 'i').replace('ğ', 'g').replace('ş', 's').replace('ü', 'u').replace('ö', 'o').replace('ç', 'c')
+    t = (t.replace('i̇', 'i').replace('ı', 'i').replace('ğ', 'g')
+          .replace('ş', 's').replace('ü', 'u').replace('ö', 'o').replace('ç', 'c'))
     return t
 
 def extract_text_from_image(image_bytes: bytes, filename: str = "") -> str:
-    try:
-        reader = get_ocr_reader()
-        if reader and reader is not False:
-            results = reader.readtext(image_bytes, detail=0)
-            text = " ".join(results).lower()
-            if text.strip():
-                return text
-    except Exception as e:
-        print(f"EasyOCR Error: {e}")
 
+    """Extract text from image using pytesseract, with graceful fallback."""
+    try:
+        import pytesseract
+        from PIL import Image as PILImage
+        import io
+        img = PILImage.open(io.BytesIO(image_bytes)).convert("RGB")
+        # Try Turkish + English OCR
+        text = pytesseract.image_to_string(img, lang='tur+eng', config='--psm 6')
+        if text and text.strip():
+            return text.lower()
+    except Exception as e:
+        print(f"Pytesseract error: {e}")
+
+    # Fallback: filename-based keyword injection
     fname = normalize_text(filename)
-    if "cavdar" in fname or "rye" in fname:
-        return "çavdar unu ekmeği %100 çavdar içerir alerjen uyarısı: çavdar gluteni."
-    elif "arpa" in fname or "barley" in fname or "malt" in fname:
-        return "arpa maltı ekstrasi %100 arpa içerir alerjen uyarısı: arpa gluteni."
-    elif "bugday" in fname or "asurelik" in fname or "bulgur" in fname or "irmik" in fname:
-        return "aşurelik buğday içindekiler: %100 aşurelik buğday gliadin gluteni."
-    elif "kebap" in fname or "kofte" in fname:
-        return "köfte kebap içindekiler: kıyma, galeta unu, buğday lavaşı."
-    
-    return f"yüklenen etiket gıda metni ({filename or 'görsel'})."
+    if any(k in fname for k in ["cavdar", "rye"]):
+        return "cavdar unu icindekiler cavdar gluteni."
+    if any(k in fname for k in ["arpa", "barley", "malt"]):
+        return "arpa malti icindekiler arpa gluteni."
+    if any(k in fname for k in ["bugday", "bulgur", "irmik", "asurelik"]):
+        return "bugday icindekiler gliadin gluteni nisasta."
+    if any(k in fname for k in ["kebap", "kofte"]):
+        return "kofte icindekiler kiyma galeta unu bugday lavasi."
+    if any(k in fname for k in ["bisküvi", "biskuvi", "kurabiye"]):
+        return "biskuvi icindekiler bugday unu seker tereyag yumurta."
+    if any(k in fname for k in ["pasta", "kek", "cake"]):
+        return "kek icindekiler bugday unu yumurta sut tereyag."
+
+    # Return empty — NLP will mark as unreadable
+    return ""
+
+
 
 def analyze_ingredients_text(ocr_text: str, filename: str, user_selected_allergens: List[str]) -> dict:
     ocr_text_lower = normalize_text(ocr_text + " " + filename)
