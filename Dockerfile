@@ -35,4 +35,5 @@ EXPOSE 8000
 # Set working directory to backend folder so uvicorn runs main:app with local imports (database, models)
 WORKDIR /home/user/app/backend
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Use shell form of CMD to expand the dynamic $PORT environment variable injected by Railway
+CMD uvicorn main:app --host 0.0.0.0 --port $PORT
