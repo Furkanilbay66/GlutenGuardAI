@@ -372,6 +372,94 @@ def get_scan_history(
         } for h in history_records
     ]
 
+class AnalyzeBase64Request(BaseModel):
+    image_base64: str          # data:image/jpeg;base64,... veya düz base64
+    allergens: Optional[List[str]] = ["gluten", "lactose"]
+    filename: Optional[str] = "photo.jpg"
+
+@app.post("/analyze-base64")
+async def analyze_base64(
+    body: AnalyzeBase64Request,
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(database.get_db)
+):
+    import base64
+    current_user = get_current_user(authorization=authorization, db=db)
+
+    # Strip data URI prefix if present
+    b64_data = body.image_base64
+    if "," in b64_data:
+        b64_data = b64_data.split(",", 1)[1]
+
+    try:
+        image_bytes = base64.b64decode(b64_data)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Geçersiz base64 görsel verisi.")
+
+    if not image_bytes:
+        raise HTTPException(status_code=400, detail="Boş görsel verisi.")
+
+    fname = body.filename or "photo.jpg"
+    user_allergies = body.allergens or ["gluten", "lactose"]
+
+    raw_text = extract_text_from_image(image_bytes, filename=fname)
+    analysis = analyze_ingredients_text(raw_text, fname, user_allergies)
+    food_meta = infer_food_name_and_category(analysis["norm_text"])
+
+    detected_risks = analysis["detected_risks"]
+    is_safe = analysis["is_safe"]
+
+    if is_safe:
+        explanation = {
+            "title": f"Bu {food_meta['name']} Seçili Alerjen Profiliniz İçin Güvenli mi?",
+            "summary": f"Yapay zeka analizimiz, aktifleştirdiğiniz {len(user_allergies)} adet alerjen profilinize göre etiket üzerinde hiçbir tetikleyici kök kelimeye rastlamamıştır.",
+            "proofs": [
+                {"step": "01", "title": "Alerjen Kök Sözlük Taraması Temiz", "description": "Tetikleyici kelimeler taranmış ve hiçbir sakıncalı hammadde kökü bulunmamıştır."},
+                {"step": "02", "title": "Bileşen Filtresi Doğrulandı", "description": "Seçilen profil kapsamındaki tüm içerik kurallara uygundur."}
+            ],
+            "dietitian_note": "GlutenGuard Uzman Notu: Seçtiğiniz tüm alerjen profillerine göre rahatlıkla tüketebilirsiniz."
+        }
+        memory_verdict = f"Tekrar Güvenle Tercih Edilebilir ({food_meta['category']})"
+    else:
+        trigger_summary = ", ".join([f"'{r['trigger_word']}'" for r in detected_risks]) if detected_risks else "Şüpheli İçerik"
+        explanation = {
+            "title": f"Bu {food_meta['name']} Aktif Alerjen Profiliniz İçin KESİNLİKLE RİSKLİ!",
+            "summary": f"Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici kelimeler ({trigger_summary}) tespit edilmiştir.",
+            "proofs": [
+                {"step": "01", "title": "Doğrudan Tetikleyici Kelime Bulundu", "description": f"Etikette geçen {trigger_summary} sakıncalı madde listenizle doğrudan çelişmektedir."},
+                {"step": "02", "title": "Taksonomik Alerjen Kural İhlali", "description": "Ürün içeriği bağışıklık sisteminde alerjik reaksiyon tetikleme riski taşır."}
+            ],
+            "dietitian_note": f"GlutenGuard Uzman Uyarısı: KESİNLİKLE TÜKETMEYİNİZ! Ürün etiketinde {trigger_summary} maddeleri bulunmaktadır."
+        }
+        names_short = ", ".join([r['trigger_word'].capitalize() for r in detected_risks[:2]]) if detected_risks else "Şüpheli İçerik"
+        memory_verdict = f"KESİNLİKLE YASAK ({names_short} Riski)"
+
+    if current_user:
+        history_item = models.ScanHistory(
+            user_id=current_user.id,
+            product_name=food_meta["name"],
+            category_icon=food_meta["icon"],
+            food_category=food_meta["category"],
+            is_safe=is_safe,
+            memory_verdict=memory_verdict,
+            matched_allergens=detected_risks,
+            raw_text=raw_text
+        )
+        db.add(history_item)
+        db.commit()
+
+    return {
+        "detected_raw_text": raw_text,
+        "is_safe": is_safe,
+        "detected_food_name": food_meta["name"],
+        "food_category": food_meta["category"],
+        "category_icon": food_meta["icon"],
+        "memory_verdict": memory_verdict,
+        "matched_allergens": detected_risks,
+        "unmatched_but_suspicious": [],
+        "explanation": explanation
+    }
+
 @app.post("/analyze-ingredients")
 async def analyze_ingredients(
     file: UploadFile = File(...),
