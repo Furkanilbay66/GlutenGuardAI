@@ -538,6 +538,33 @@ async def analyze_ingredients(
         "explanation": explanation
     }
 
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+# Serve compiled React/Vite frontend if available
+DIST_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../dist"))
+
+if os.path.exists(DIST_DIR):
+    assets_dir = os.path.join(DIST_DIR, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+
+    # SPA routing catch-all: serve files if they exist, otherwise serve index.html
+    @app.get("/{file_name:path}")
+    async def serve_static_or_spa(file_name: str):
+        # Prevent accessing backend routes (anything starting with auth/, profile/, analyze-, scan-)
+        if file_name.startswith(("auth/", "profile/", "analyze-", "scan-", "health")):
+            raise HTTPException(status_code=404, detail="Not Found")
+            
+        file_path = os.path.join(DIST_DIR, file_name)
+        if file_name and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(DIST_DIR, "index.html"))
+else:
+    @app.get("/")
+    def read_root():
+        return {"status": "online", "message": "FastAPI engine is running. Frontend static build not found."}
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))

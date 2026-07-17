@@ -1,11 +1,20 @@
-# nixpacks.toml configuration to override default Node.js build detection
+# nixpacks.toml configuration to build frontend and deploy python backend on Railway
 providers = ["python"]
 
 [phases.setup]
+nixPkgs = ["nodejs"]
 aptPkgs = ["tesseract-ocr", "tesseract-ocr-tur", "tesseract-ocr-eng"]
 
 [phases.install]
-cmds = ["python -m venv /opt/venv && . /opt/venv/bin/activate && pip install -r backend/requirements.txt"]
+# Install python and node dependencies
+cmds = [
+  "python -m venv /opt/venv && . /opt/venv/bin/activate && pip install -r backend/requirements.txt",
+  "npm install"
+]
+
+[phases.build]
+# Compile the React/Vite app into the dist/ directory
+cmds = ["npm run build"]
 
 [start]
 cmd = ". /opt/venv/bin/activate && cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT"
