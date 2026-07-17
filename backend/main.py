@@ -2,16 +2,33 @@ import os
 import json
 import re
 import io
+import datetime
 from typing import List, Optional
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Depends, Header, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from PIL import Image
 
+from sqlalchemy.orm import Session
+from passlib.context import CryptContext
+import jwt
+
+import database
+import models
+
+# 1. Initialize Database Tables
+models.Base.metadata.create_all(bind=database.engine)
+
+# Password hashing & JWT configuration
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+SECRET_KEY = os.getenv("JWT_SECRET", "glutenguard-super-secret-key-2026")
+ALGORITHM = "HS256"
+
 app = FastAPI(
-    title="GlutenGuard AI Backend Engine (Hugging Face Docker)",
-    description="Python FastAPI Keyword & Taxonomy Based NLP Allergen Engine for Hugging Face Spaces",
-    version="7.0.0"
+    title="GlutenGuard AI Backend Engine (Mobile & SQL Auth)",
+    description="Python FastAPI NLP Engine with SQLAlchemy User Auth & Scan Memory",
+    version="8.0.0"
 )
 
 origins = [
@@ -19,17 +36,64 @@ origins = [
     "http://localhost:3000",
     "http://localhost:3005",
     "http://localhost:7860",
+    "http://localhost:8000",
     "https://glutenguard-ai.vercel.app"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_origin_regex=r"https://glutenguard-ai-.*\.vercel\.app",
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Pydantic Schemas
+class UserRegister(BaseModel):
+    email: EmailStr
+    password: str
+    full_name: Optional[str] = None
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class UserResponse(BaseModel):
+    id: int
+    email: str
+    full_name: Optional[str] = None
+    created_at: str
+
+class ProfileAllergensUpdate(BaseModel):
+    allergens: List[str]
+
+# Helpers for Auth
+def hash_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+def create_access_token(data: dict, expires_delta: Optional[datetime.timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.datetime.utcnow() + (expires_delta or datetime.timedelta(days=30))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def get_current_user(authorization: Optional[str] = Header(None), db: Session = Depends(database.get_db)):
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: int = payload.get("sub")
+        if user_id is None:
+            return None
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+        return user
+    except Exception:
+        return None
+
 
 # 1. Alerjen Grupları ve Tetikleyici Kelimeler (Kök Sözlük)
 ALLERGEN_KEYWORDS = {
@@ -188,19 +252,139 @@ def infer_food_name_and_category(norm_text: str) -> dict:
     else:
         return {"name": "Ambalajlı Paketli Gıda", "category": "Ambalajlı Paketli Gıda", "icon": "📦"}
 
+# API Endpoints
 @app.get("/health")
 def health_check():
-    return {"status": "online", "service": "GlutenGuard AI Hugging Face Space API"}
+    return {"status": "online", "service": "GlutenGuard AI Full Auth & Mobile Engine"}
+
+# Authentication Endpoints
+@app.post("/auth/register")
+def register(user_data: UserRegister, db: Session = Depends(database.get_db)):
+    existing_user = db.query(models.User).filter(models.User.email == user_data.email).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Bu e-posta adresi ile zaten kayıtlı bir kullanıcı var.")
+
+    hashed_pwd = hash_password(user_data.password)
+    new_user = models.User(
+        email=user_data.email,
+        full_name=user_data.full_name,
+        hashed_password=hashed_pwd
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    # Default profile setup
+    user_profile = models.UserProfile(user_id=new_user.id, allergens=["gluten", "lactose"])
+    db.add(user_profile)
+    db.commit()
+
+    access_token = create_access_token(data={"sub": new_user.id})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": new_user.id,
+            "email": new_user.email,
+            "full_name": new_user.full_name,
+            "allergens": user_profile.allergens
+        }
+    }
+
+@app.post("/auth/login")
+def login(login_data: UserLogin, db: Session = Depends(database.get_db)):
+    user = db.query(models.User).filter(models.User.email == login_data.email).first()
+    if not user or not verify_password(login_data.password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="E-posta veya şifre hatalı.")
+
+    profile = db.query(models.UserProfile).filter(models.UserProfile.user_id == user.id).first()
+    allergens = profile.allergens if profile else ["gluten", "lactose"]
+
+    access_token = create_access_token(data={"sub": user.id})
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "allergens": allergens
+        }
+    }
+
+@app.get("/auth/me")
+def get_me(current_user: Optional[models.User] = Depends(get_current_user), db: Session = Depends(database.get_db)):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Yetkisiz erişim. Giriş yapmalısınız.")
+
+    profile = db.query(models.UserProfile).filter(models.UserProfile.user_id == current_user.id).first()
+    allergens = profile.allergens if profile else ["gluten", "lactose"]
+
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name,
+        "allergens": allergens
+    }
+
+@app.post("/profile/allergens")
+def update_profile_allergens(
+    data: ProfileAllergensUpdate,
+    current_user: Optional[models.User] = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    if not current_user:
+        raise HTTPException(status_code=401, detail="Yetkisiz erişim.")
+
+    profile = db.query(models.UserProfile).filter(models.UserProfile.user_id == current_user.id).first()
+    if not profile:
+        profile = models.UserProfile(user_id=current_user.id, allergens=data.allergens)
+        db.add(profile)
+    else:
+        profile.allergens = data.allergens
+    db.commit()
+
+    return {"status": "success", "allergens": profile.allergens}
+
+@app.get("/scan-history")
+def get_scan_history(
+    current_user: Optional[models.User] = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    if not current_user:
+        return []
+
+    history_records = db.query(models.ScanHistory).filter(models.ScanHistory.user_id == current_user.id).order_by(models.ScanHistory.timestamp.desc()).all()
+    
+    return [
+        {
+            "id": h.id,
+            "name": h.product_name,
+            "food_category": h.food_category,
+            "category_icon": h.category_icon,
+            "is_safe": h.is_safe,
+            "memory_verdict": h.memory_verdict,
+            "matched_allergens": h.matched_allergens,
+            "detected_raw_text": h.raw_text,
+            "timestamp": h.timestamp.strftime("%Y-%m-%d %H:%M")
+        } for h in history_records
+    ]
 
 @app.post("/analyze-ingredients")
 async def analyze_ingredients(
     file: UploadFile = File(...),
-    allergens: Optional[str] = Form("[]")
+    allergens: Optional[str] = Form("[]"),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(database.get_db)
 ):
     try:
         user_allergies = json.loads(allergens) if allergens else []
     except Exception:
         user_allergies = ["gluten", "lactose"]
+
+    current_user = get_current_user(authorization=authorization, db=db)
 
     image_bytes = await file.read()
     if not image_bytes:
@@ -239,6 +423,21 @@ async def analyze_ingredients(
         names_short = ", ".join([r['trigger_word'].capitalize() for r in detected_risks[:2]]) if detected_risks else "Şüpheli İçerik"
         memory_verdict = f"KESİNLİKLE YASAK ({names_short} Riski)"
 
+    # If user is authenticated, save scan record directly to SQL database
+    if current_user:
+        history_item = models.ScanHistory(
+            user_id=current_user.id,
+            product_name=food_meta["name"],
+            category_icon=food_meta["icon"],
+            food_category=food_meta["category"],
+            is_safe=is_safe,
+            memory_verdict=memory_verdict,
+            matched_allergens=detected_risks,
+            raw_text=raw_text
+        )
+        db.add(history_item)
+        db.commit()
+
     return {
         "detected_raw_text": raw_text,
         "is_safe": is_safe,
@@ -253,5 +452,6 @@ async def analyze_ingredients(
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 7860))
+    port = int(os.environ.get("PORT", 8000))
+    # Listen on 0.0.0.0 so Android devices on the local Wi-Fi network can connect directly!
     uvicorn.run("main:app", host="0.0.0.0", port=port)

@@ -6,6 +6,11 @@ node_modules/
 dist/
 build/
 
+# SQLite & PyCache
+*.db
+__pycache__/
+*.pyc
+
 # Local env files
 .env
 .env.local

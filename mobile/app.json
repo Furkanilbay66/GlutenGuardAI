@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "GlutenGuard AI",
+    "slug": "glutenguard-ai-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "jsEngine": "jsc",
+    "splash": {
+      "backgroundColor": "#F4F3EF"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F4F3EF"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    }
+  }
+}

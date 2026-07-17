@@ -9,7 +9,7 @@ import { CeliacGuide } from './components/CeliacGuide';
 import { chemicalDictionary } from './data/chemicalDictionary';
 import { ShieldCheck, Heart, ShieldAlert, CloudLightning, Loader2 } from 'lucide-react';
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:7860';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://glutenguardai-production.up.railway.app';
 
 const normalizeLocalText = (str) => {
   if (!str) return '';
