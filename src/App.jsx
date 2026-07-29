@@ -83,19 +83,29 @@ const ALLERGEN_DISPLAY_NAMES = {
   sesame: "Susam & Tahin"
 };
 
+const isKeywordInTextLocal = (keyNorm, textNorm) => {
+  if (!keyNorm || !textNorm) return false;
+  if (keyNorm.length <= 4) {
+    const pattern = new RegExp(`(?<![a-z0-9çğıöşü])${keyNorm}(?![a-z0-9çğıöşü])`, 'i');
+    return pattern.test(textNorm);
+  }
+  return textNorm.includes(keyNorm);
+};
+
 const analyzeIngredientsTextLocal = (ocrText, fileName, userSelectedAllergens) => {
   const ocrTextLower = normalizeLocalText(ocrText + " " + fileName);
   const detectedRisks = [];
   let isSafe = true;
 
-  const effectiveAllergens = new Set(userSelectedAllergens || ["gluten", "lactose"]);
-  effectiveAllergens.add("gluten");
+  const effectiveAllergens = (userSelectedAllergens && userSelectedAllergens.length > 0)
+    ? new Set(userSelectedAllergens)
+    : new Set(["gluten", "lactose"]);
 
   effectiveAllergens.forEach((allergen) => {
     if (ALLERGEN_KEYWORDS[allergen]) {
       for (let keyword of ALLERGEN_KEYWORDS[allergen]) {
         const keyNorm = normalizeLocalText(keyword);
-        if (ocrTextLower.includes(keyNorm)) {
+        if (isKeywordInTextLocal(keyNorm, ocrTextLower)) {
           isSafe = false;
           const groupTitle = ALLERGEN_DISPLAY_NAMES[allergen] || allergen;
           detectedRisks.push({

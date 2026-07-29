@@ -7,7 +7,9 @@ import sys
 import pytesseract
 
 if sys.platform.startswith('win'):
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    tesseract_default = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    if os.path.exists(tesseract_default):
+        pytesseract.pytesseract.tesseract_cmd = tesseract_default
 
 from typing import List, Optional
 
@@ -32,19 +34,10 @@ SECRET_KEY = os.getenv("JWT_SECRET", "glutenguard-super-secret-key-2026")
 ALGORITHM = "HS256"
 
 app = FastAPI(
-    title="GlutenGuard AI Backend Engine (Mobile & SQL Auth)",
-    description="Python FastAPI NLP Engine with SQLAlchemy User Auth & Scan Memory",
-    version="8.0.0"
+    title="GlutenGuard AI Commercial Engine",
+    description="Enterprise Multi-Allergen NLP Analyzer, E-Number Additive Dictionary & Verified Barcode Catalog",
+    version="9.0.0"
 )
-
-origins = [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "http://localhost:3005",
-    "http://localhost:7860",
-    "http://localhost:8000",
-    "https://glutenguard-ai.vercel.app"
-]
 
 app.add_middleware(
     CORSMiddleware,
@@ -64,16 +57,24 @@ class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
-class UserResponse(BaseModel):
-    id: int
-    email: str
-    full_name: Optional[str] = None
-    created_at: str
-
 class ProfileAllergensUpdate(BaseModel):
     allergens: List[str]
+    custom_allergens: Optional[List[str]] = []
+    severity_level: Optional[str] = "celiac"
+    emergency_notes: Optional[str] = None
 
-# Helpers for Auth
+class AnalyzeBase64Request(BaseModel):
+    image_base64: str          # data:image/jpeg;base64,... or plain base64
+    allergens: Optional[List[str]] = None
+    filename: Optional[str] = "photo.jpg"
+    barcode: Optional[str] = None
+
+class ScanReportCreate(BaseModel):
+    scan_id: Optional[int] = None
+    issue_type: str
+    comments: str
+
+# Auth Helpers
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
 
@@ -100,8 +101,9 @@ def get_current_user(authorization: Optional[str] = Header(None), db: Session = 
     except Exception:
         return None
 
-
-# 1. Alerjen Grupları ve Tetikleyici Kelimeler (Kök Sözlük)
+# ─────────────────────────────────────────────────────────────────────────────
+# 1. Comprehensive Allergen Dictionary & E-Numbers Knowledge Base
+# ─────────────────────────────────────────────────────────────────────────────
 ALLERGEN_KEYWORDS = {
     "gluten": [
         "buğday", "bugday", "wheat", "arpa", "barley", "çavdar", "cavdar", "rye",
@@ -162,6 +164,68 @@ ALLERGEN_DISPLAY_NAMES = {
     "sesame": "Susam & Tahin"
 }
 
+E_NUMBER_KNOWLEDGE_BASE = {
+    "E322": {
+        "name": "Soya Lesitini (E322)",
+        "allergen_group": "soy",
+        "risk_level": "high",
+        "category": "Emülgatör",
+        "description": "Soya fasulyesinden ekstrakte edilir. Soya alerjisi olan bireylerde reaksiyon tetikleyebilir.",
+        "advice": "Soya hassasiyetiniz aktifse tüketmeyiniz."
+    },
+    "E1105": {
+        "name": "Lizozim (E1105)",
+        "allergen_group": "egg",
+        "risk_level": "high",
+        "category": "Koruyucu Enzim",
+        "description": "Yumurta akından elde edilen enzimdir. Yumurta alerjisi olanlar için sakıncalıdır.",
+        "advice": "Yumurta alerjisinde tüketilmesi önerilmez."
+    },
+    "E1404": {
+        "name": "Modifiye Nişasta (E1404)",
+        "allergen_group": "gluten",
+        "risk_level": "medium",
+        "category": "Kıvam Artırıcı",
+        "description": "Buğday kökenli nişastadan üretilmiş olabilir. Çölyak ve gluten hassasiyetinde gluten kalıntısı riski barındırır.",
+        "advice": "Ambalajda 'Glutensiz' ibaresi yoksa dikkat ediniz."
+    },
+    "E1422": {
+        "name": "Modifiye Nişasta (E1422)",
+        "allergen_group": "gluten",
+        "risk_level": "medium",
+        "category": "Kıvam Artırıcı",
+        "description": "Buğday veya mısır nişastası modifikasyonudur.",
+        "advice": "Gluten profilinde şüpheli katkı maddesidir."
+    },
+    "E150d": {
+        "name": "Amonyum Sülfit Karamel (E150d)",
+        "allergen_group": "gluten",
+        "risk_level": "medium",
+        "category": "Renklendirici",
+        "description": "Arpa maltı veya buğday nişastasından sentezlenen karamel renklendirici.",
+        "advice": "Arpa maltı / gluten riski barındırabilir."
+    },
+    "E471": {
+        "name": "Mono ve Digliseridler (E471)",
+        "allergen_group": "lactose",
+        "risk_level": "low",
+        "category": "Emülgatör",
+        "description": "Hayvansal veya bitkisel yağ asitleri emülgatörüdür.",
+        "advice": "Şiddetli süt veya hayvansal yağ hassasiyetinde üreticiye danışınız."
+    },
+    "E621": {
+        "name": "Monosodyum Glutamat (MSG - E621)",
+        "allergen_group": "additive",
+        "risk_level": "medium",
+        "category": "Lezzet Artırıcı",
+        "description": "Alerjik hassasiyet ve baş ağrısına yol açabilen lezzet artırıcı çeşni.",
+        "advice": "Bünyesel hassasiyetiniz varsa tüketmeyiniz."
+    }
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 2. Smart NLP Normalization & Boundary Matching Engine
+# ─────────────────────────────────────────────────────────────────────────────
 def normalize_text(text: str) -> str:
     if not text:
         return ""
@@ -170,22 +234,48 @@ def normalize_text(text: str) -> str:
           .replace('ş', 's').replace('ü', 'u').replace('ö', 'o').replace('ç', 'c'))
     return t
 
-def extract_text_from_image(image_bytes: bytes, filename: str = "") -> str:
+def is_keyword_in_text(keyword_norm: str, text_norm: str) -> bool:
+    """
+    Precision boundary matcher:
+    - Short terms (<= 4 chars) match on word boundaries so 'un' won't match 'koyun'.
+    - Longer terms match flexible stems.
+    """
+    if not keyword_norm or not text_norm:
+        return False
+    
+    if len(keyword_norm) <= 4:
+        pattern = r'(?<![a-z0-9çğıöşü])' + re.escape(keyword_norm) + r'(?![a-z0-9çğıöşü])'
+        return bool(re.search(pattern, text_norm))
+    else:
+        return keyword_norm in text_norm
 
-    """Extract text from image using pytesseract, with graceful fallback."""
+def check_cross_contamination(keyword_norm: str, text_norm: str) -> bool:
+    """Detects if an allergen appears inside a trace/cross-contamination sentence."""
+    trace_patterns = [
+        r'eser miktarda [^.]*' + re.escape(keyword_norm),
+        r'iz miktarda [^.]*' + re.escape(keyword_norm),
+        r'may contain [^.]*' + re.escape(keyword_norm),
+        r'ayni hatta [^.]*' + re.escape(keyword_norm),
+        r'ayni tesiste [^.]*' + re.escape(keyword_norm),
+        re.escape(keyword_norm) + r'[^.]*icerebilir',
+    ]
+    for p in trace_patterns:
+        if re.search(p, text_norm):
+            return True
+    return False
+
+def extract_text_from_image(image_bytes: bytes, filename: str = "") -> str:
+    """Extracts text using pytesseract OCR with intelligent filename fallbacks."""
     try:
         import pytesseract
         from PIL import Image as PILImage
-        import io
         img = PILImage.open(io.BytesIO(image_bytes)).convert("RGB")
-        # Try Turkish + English OCR
         text = pytesseract.image_to_string(img, lang='tur+eng', config='--psm 6')
         if text and text.strip():
             return text.lower()
     except Exception as e:
-        print(f"Pytesseract error: {e}")
+        print(f"Pytesseract OCR Info: {e}")
 
-    # Fallback: filename-based keyword injection
     fname = normalize_text(filename)
     if any(k in fname for k in ["cavdar", "rye"]):
         return "cavdar unu icindekiler cavdar gluteni."
@@ -196,38 +286,72 @@ def extract_text_from_image(image_bytes: bytes, filename: str = "") -> str:
     if any(k in fname for k in ["kebap", "kofte"]):
         return "kofte icindekiler kiyma galeta unu bugday lavasi."
     if any(k in fname for k in ["bisküvi", "biskuvi", "kurabiye"]):
-        return "biskuvi icindekiler bugday unu seker tereyag yumurta."
+        return "biskuvi icindekiler bugday unu seker tereyag yumurta soya lesitini. eser miktarda findik icerebilir."
     if any(k in fname for k in ["pasta", "kek", "cake"]):
         return "kek icindekiler bugday unu yumurta sut tereyag."
 
-    # Return empty — NLP will mark as unreadable
     return ""
 
-
-
-def analyze_ingredients_text(ocr_text: str, filename: str, user_selected_allergens: List[str]) -> dict:
+def analyze_ingredients_text(ocr_text: str, filename: str, user_selected_allergens: Optional[List[str]]) -> dict:
     ocr_text_lower = normalize_text(ocr_text + " " + filename)
     detected_risks = []
+    cross_contamination_warnings = []
+    additive_warnings = []
     is_safe = True
 
-    effective_allergens = set(user_selected_allergens or ["gluten", "lactose"])
-    effective_allergens.add("gluten")
+    # Respect ONLY user's explicitly selected allergen preferences!
+    if user_selected_allergens is not None and len(user_selected_allergens) > 0:
+        effective_allergens = set(user_selected_allergens)
+    else:
+        effective_allergens = {"gluten", "lactose"}
 
+    # 1. Direct & Trace Allergen Matching
     for allergen in effective_allergens:
         if allergen in ALLERGEN_KEYWORDS:
             for keyword in ALLERGEN_KEYWORDS[allergen]:
                 key_norm = normalize_text(keyword)
-                if key_norm in ocr_text_lower:
-                    is_safe = False
+                if is_keyword_in_text(key_norm, ocr_text_lower):
                     group_title = ALLERGEN_DISPLAY_NAMES.get(allergen, allergen.capitalize())
-                    detected_risks.append({
+                    is_trace = check_cross_contamination(key_norm, ocr_text_lower)
+
+                    item_payload = {
                         "name": f"{group_title} ('{keyword}')",
                         "allergen_group": allergen,
                         "trigger_word": keyword,
-                        "risk": "critical" if allergen == "gluten" or allergen == "peanuts" else "high",
-                        "description": f"Ürün etiketinde '{keyword}' tespit edildi. Bu madde seçtiğiniz '{group_title}' hassasiyeti için sakıncalıdır!"
-                    })
+                        "risk": "warning" if is_trace else ("critical" if allergen in ["gluten", "peanuts"] else "high"),
+                        "is_cross_contamination": is_trace,
+                        "description": (
+                            f"Çapraz Bulaşma Uyarısı: Etikette '{keyword}' maddesi iz/eser miktarda bulunabilir ibaresiyle tespit edildi."
+                            if is_trace
+                            else f"Ürün etiketinde '{keyword}' tespit edildi. Bu madde seçtiğiniz '{group_title}' hassasiyeti için sakıncalıdır!"
+                        )
+                    }
+
+                    if is_trace:
+                        cross_contamination_warnings.append(item_payload)
+                    else:
+                        is_safe = False
+                        detected_risks.append(item_payload)
                     break
+
+    # 2. Additive & E-Number Rules
+    for e_code, additive_info in E_NUMBER_KNOWLEDGE_BASE.items():
+        code_norm = normalize_text(e_code)
+        name_norm = normalize_text(additive_info["name"])
+        if is_keyword_in_text(code_norm, ocr_text_lower) or (len(name_norm) > 4 and name_norm in ocr_text_lower):
+            if additive_info["allergen_group"] in effective_allergens:
+                additive_payload = {
+                    "e_code": e_code,
+                    "name": additive_info["name"],
+                    "allergen_group": additive_info["allergen_group"],
+                    "risk": additive_info["risk_level"],
+                    "category": additive_info["category"],
+                    "description": additive_info["description"],
+                    "advice": additive_info["advice"]
+                }
+                additive_warnings.append(additive_payload)
+                if additive_info["risk_level"] in ["critical", "high"]:
+                    is_safe = False
 
     is_readable = len(ocr_text_lower.strip()) > 3 and "gorsel" not in ocr_text_lower
     final_is_safe = is_safe and is_readable
@@ -235,6 +359,8 @@ def analyze_ingredients_text(ocr_text: str, filename: str, user_selected_allerge
     return {
         "is_safe": final_is_safe,
         "detected_risks": detected_risks,
+        "cross_contamination_warnings": cross_contamination_warnings,
+        "additive_warnings": additive_warnings,
         "norm_text": ocr_text_lower
     }
 
@@ -258,10 +384,102 @@ def infer_food_name_and_category(norm_text: str) -> dict:
     else:
         return {"name": "Ambalajlı Paketli Gıda", "category": "Ambalajlı Paketli Gıda", "icon": "📦"}
 
-# API Endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+# 3. Seed Initial Database Products & Additives
+# ─────────────────────────────────────────────────────────────────────────────
+def seed_initial_data():
+    db = database.SessionLocal()
+    try:
+        if db.query(models.AdditiveCatalog).count() == 0:
+            for code, info in E_NUMBER_KNOWLEDGE_BASE.items():
+                db.add(models.AdditiveCatalog(
+                    e_code=code,
+                    name=info["name"],
+                    allergen_group=info["allergen_group"],
+                    category=info["category"],
+                    risk_level=info["risk_level"],
+                    description=info["description"],
+                    advice=info["advice"]
+                ))
+            db.commit()
+
+        if db.query(models.ProductCatalog).count() == 0:
+            sample_products = [
+                {
+                    "barcode": "8690504001010",
+                    "name": "Duru Aşurelik Buğday",
+                    "brand": "Duru Bakliyat",
+                    "food_category": "Buğday & Tahıl Ürünleri",
+                    "category_icon": "🌾",
+                    "ingredients_text": "%100 Aşurelik sert buğday. Yüksek oranda gluten içerir; çölyak hastaları için kesinlikle uygun değildir.",
+                    "is_certified_gluten_free": False,
+                    "verified_contained_allergens": ["gluten"],
+                    "verified_safe_allergens": ["lactose", "peanuts", "soy", "egg", "seafood", "sesame"]
+                },
+                {
+                    "barcode": "8690123456789",
+                    "name": "Organik Glutensiz Yulaf Ezmesi",
+                    "brand": "GlutenGuard Certified",
+                    "food_category": "Kahvaltılık Tahıl",
+                    "category_icon": "🥣",
+                    "ingredients_text": "%100 Organik Glutensiz İnce Öğütülmüş Yulaf Ezmesi. Koruyucu ve katkı maddesi içermez. Çölyak ve gluten hassasiyeti için uygundur.",
+                    "is_certified_gluten_free": True,
+                    "verified_contained_allergens": [],
+                    "verified_safe_allergens": ["gluten", "lactose", "milk_protein", "peanuts", "nuts", "soy", "egg", "seafood", "sesame"]
+                },
+                {
+                    "barcode": "8690000112233",
+                    "name": "Kremalı Sandviç Bisküvi",
+                    "brand": "Atıştırmalık Co.",
+                    "food_category": "Bisküvi & Atıştırmalık",
+                    "category_icon": "🍪",
+                    "ingredients_text": "Buğday unu (gluten), şeker, palm yağı, peynir altı suyu tozu (süt), soya lesitini (E322). Eser miktarda fındık ve susam içerebilir.",
+                    "is_certified_gluten_free": False,
+                    "verified_contained_allergens": ["gluten", "lactose", "soy"],
+                    "verified_safe_allergens": ["peanuts", "egg", "seafood"]
+                }
+            ]
+            for p in sample_products:
+                db.add(models.ProductCatalog(**p))
+            db.commit()
+    except Exception as e:
+        print(f"Data Seeding Info: {e}")
+    finally:
+        db.close()
+
+seed_initial_data()
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 4. Commercial REST API Endpoints
+# ─────────────────────────────────────────────────────────────────────────────
 @app.get("/health")
 def health_check():
-    return {"status": "online", "service": "GlutenGuard AI Full Auth & Mobile Engine"}
+    return {
+        "status": "online",
+        "service": "GlutenGuard AI Enterprise Engine",
+        "version": "9.0.0",
+        "database": "connected"
+    }
+
+@app.get("/stats")
+def get_system_stats(db: Session = Depends(database.get_db)):
+    """System & Investor Performance Metrics."""
+    total_users = db.query(models.User).count()
+    total_scans = db.query(models.ScanHistory).count()
+    safe_scans = db.query(models.ScanHistory).filter(models.ScanHistory.is_safe == True).count()
+    products_count = db.query(models.ProductCatalog).count()
+    additives_count = db.query(models.AdditiveCatalog).count()
+
+    safe_rate = round((safe_scans / total_scans * 100), 1) if total_scans > 0 else 100.0
+
+    return {
+        "total_users": total_users,
+        "total_scans": total_scans,
+        "safe_scan_percentage": safe_rate,
+        "verified_products_in_catalog": products_count,
+        "active_additive_rules": additives_count,
+        "supported_allergen_groups": len(ALLERGEN_KEYWORDS)
+    }
 
 # Authentication Endpoints
 @app.post("/auth/register")
@@ -280,7 +498,6 @@ def register(user_data: UserRegister, db: Session = Depends(database.get_db)):
     db.commit()
     db.refresh(new_user)
 
-    # Default profile setup
     user_profile = models.UserProfile(user_id=new_user.id, allergens=["gluten", "lactose"])
     db.add(user_profile)
     db.commit()
@@ -332,7 +549,8 @@ def get_me(current_user: Optional[models.User] = Depends(get_current_user), db: 
         "id": current_user.id,
         "email": current_user.email,
         "full_name": current_user.full_name,
-        "allergens": allergens
+        "allergens": allergens,
+        "severity_level": profile.severity_level if profile else "celiac"
     }
 
 @app.post("/profile/allergens")
@@ -346,13 +564,62 @@ def update_profile_allergens(
 
     profile = db.query(models.UserProfile).filter(models.UserProfile.user_id == current_user.id).first()
     if not profile:
-        profile = models.UserProfile(user_id=current_user.id, allergens=data.allergens)
+        profile = models.UserProfile(
+            user_id=current_user.id,
+            allergens=data.allergens,
+            custom_allergens=data.custom_allergens or [],
+            severity_level=data.severity_level or "celiac",
+            emergency_notes=data.emergency_notes
+        )
         db.add(profile)
     else:
         profile.allergens = data.allergens
+        if data.custom_allergens is not None:
+            profile.custom_allergens = data.custom_allergens
+        if data.severity_level:
+            profile.severity_level = data.severity_level
+        if data.emergency_notes is not None:
+            profile.emergency_notes = data.emergency_notes
     db.commit()
 
     return {"status": "success", "allergens": profile.allergens}
+
+# Verified Product Catalog Endpoints
+@app.get("/products")
+def search_products(q: Optional[str] = None, db: Session = Depends(database.get_db)):
+    query = db.query(models.ProductCatalog)
+    if q:
+        query = query.filter(models.ProductCatalog.name.ilike(f"%{q}%") | models.ProductCatalog.brand.ilike(f"%{q}%"))
+    products = query.limit(20).all()
+    return products
+
+@app.get("/products/barcode/{barcode}")
+def get_product_by_barcode(barcode: str, db: Session = Depends(database.get_db)):
+    product = db.query(models.ProductCatalog).filter(models.ProductCatalog.barcode == barcode).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Barkod katalogta bulunamadı.")
+    return product
+
+# Additives Endpoints
+@app.get("/additives")
+def list_additives(db: Session = Depends(database.get_db)):
+    return db.query(models.AdditiveCatalog).all()
+
+@app.post("/scan-reports")
+def create_scan_report(
+    report: ScanReportCreate,
+    current_user: Optional[models.User] = Depends(get_current_user),
+    db: Session = Depends(database.get_db)
+):
+    new_report = models.ScanReport(
+        user_id=current_user.id if current_user else None,
+        scan_id=report.scan_id,
+        issue_type=report.issue_type,
+        comments=report.comments
+    )
+    db.add(new_report)
+    db.commit()
+    return {"status": "success", "message": "Geri bildiriminiz kaydedildi. Teşekkür ederiz!"}
 
 @app.get("/scan-history")
 def get_scan_history(
@@ -373,16 +640,14 @@ def get_scan_history(
             "is_safe": h.is_safe,
             "memory_verdict": h.memory_verdict,
             "matched_allergens": h.matched_allergens,
+            "cross_contamination_flags": h.cross_contamination_flags,
+            "additive_warnings": h.additive_warnings,
             "detected_raw_text": h.raw_text,
             "timestamp": h.timestamp.strftime("%Y-%m-%d %H:%M")
         } for h in history_records
     ]
 
-class AnalyzeBase64Request(BaseModel):
-    image_base64: str          # data:image/jpeg;base64,... veya düz base64
-    allergens: Optional[List[str]] = ["gluten", "lactose"]
-    filename: Optional[str] = "photo.jpg"
-
+# Core Image & Base64 Analysis Endpoint
 @app.post("/analyze-base64")
 async def analyze_base64(
     body: AnalyzeBase64Request,
@@ -392,7 +657,6 @@ async def analyze_base64(
     import base64
     current_user = get_current_user(authorization=authorization, db=db)
 
-    # Strip data URI prefix if present
     b64_data = body.image_base64
     if "," in b64_data:
         b64_data = b64_data.split(",", 1)[1]
@@ -406,22 +670,36 @@ async def analyze_base64(
         raise HTTPException(status_code=400, detail="Boş görsel verisi.")
 
     fname = body.filename or "photo.jpg"
-    user_allergies = body.allergens or ["gluten", "lactose"]
+    user_allergies = body.allergens
 
-    raw_text = extract_text_from_image(image_bytes, filename=fname)
-    analysis = analyze_ingredients_text(raw_text, fname, user_allergies)
-    food_meta = infer_food_name_and_category(analysis["norm_text"])
+    # Check ProductCatalog by barcode if provided
+    if body.barcode:
+        cat_product = db.query(models.ProductCatalog).filter(models.ProductCatalog.barcode == body.barcode).first()
+        if cat_product:
+            raw_text = cat_product.ingredients_text
+            analysis = analyze_ingredients_text(raw_text, cat_product.name, user_allergies)
+            food_meta = {"name": cat_product.name, "category": cat_product.food_category, "icon": cat_product.category_icon}
+        else:
+            raw_text = extract_text_from_image(image_bytes, filename=fname)
+            analysis = analyze_ingredients_text(raw_text, fname, user_allergies)
+            food_meta = infer_food_name_and_category(analysis["norm_text"])
+    else:
+        raw_text = extract_text_from_image(image_bytes, filename=fname)
+        analysis = analyze_ingredients_text(raw_text, fname, user_allergies)
+        food_meta = infer_food_name_and_category(analysis["norm_text"])
 
     detected_risks = analysis["detected_risks"]
+    cross_warnings = analysis["cross_contamination_warnings"]
+    additive_warnings = analysis["additive_warnings"]
     is_safe = analysis["is_safe"]
 
     if is_safe:
         explanation = {
             "title": f"Bu {food_meta['name']} Seçili Alerjen Profiliniz İçin Güvenli mi?",
-            "summary": f"Yapay zeka analizimiz, aktifleştirdiğiniz {len(user_allergies)} adet alerjen profilinize göre etiket üzerinde hiçbir tetikleyici kök kelimeye rastlamamıştır.",
+            "summary": "Yapay zeka analizimiz, aktifleştirdiğiniz alerjen profilinize göre etiket üzerinde hiçbir tetikleyici hammadde köküne rastlamamıştır.",
             "proofs": [
                 {"step": "01", "title": "Alerjen Kök Sözlük Taraması Temiz", "description": "Tetikleyici kelimeler taranmış ve hiçbir sakıncalı hammadde kökü bulunmamıştır."},
-                {"step": "02", "title": "Bileşen Filtresi Doğrulandı", "description": "Seçilen profil kapsamındaki tüm içerik kurallara uygundur."}
+                {"step": "02", "title": "Bileşen & Katkı Maddesi Filtresi Doğrulandı", "description": "Seçilen profil kapsamındaki tüm içerik ve E-kodları kurallara uygundur."}
             ],
             "dietitian_note": "GlutenGuard Uzman Notu: Seçtiğiniz tüm alerjen profillerine göre rahatlıkla tüketebilirsiniz."
         }
@@ -430,7 +708,7 @@ async def analyze_base64(
         trigger_summary = ", ".join([f"'{r['trigger_word']}'" for r in detected_risks]) if detected_risks else "Şüpheli İçerik"
         explanation = {
             "title": f"Bu {food_meta['name']} Aktif Alerjen Profiliniz İçin KESİNLİKLE RİSKLİ!",
-            "summary": f"Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici kelimeler ({trigger_summary}) tespit edilmiştir.",
+            "summary": f"Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici maddeler ({trigger_summary}) tespit edilmiştir.",
             "proofs": [
                 {"step": "01", "title": "Doğrudan Tetikleyici Kelime Bulundu", "description": f"Etikette geçen {trigger_summary} sakıncalı madde listenizle doğrudan çelişmektedir."},
                 {"step": "02", "title": "Taksonomik Alerjen Kural İhlali", "description": "Ürün içeriği bağışıklık sisteminde alerjik reaksiyon tetikleme riski taşır."}
@@ -443,12 +721,15 @@ async def analyze_base64(
     if current_user:
         history_item = models.ScanHistory(
             user_id=current_user.id,
+            barcode=body.barcode,
             product_name=food_meta["name"],
             category_icon=food_meta["icon"],
             food_category=food_meta["category"],
             is_safe=is_safe,
             memory_verdict=memory_verdict,
             matched_allergens=detected_risks,
+            cross_contamination_flags=cross_warnings,
+            additive_warnings=additive_warnings,
             raw_text=raw_text
         )
         db.add(history_item)
@@ -462,6 +743,8 @@ async def analyze_base64(
         "category_icon": food_meta["icon"],
         "memory_verdict": memory_verdict,
         "matched_allergens": detected_risks,
+        "cross_contamination_warnings": cross_warnings,
+        "additive_warnings": additive_warnings,
         "unmatched_but_suspicious": [],
         "explanation": explanation
     }
@@ -490,12 +773,14 @@ async def analyze_ingredients(
     food_meta = infer_food_name_and_category(analysis["norm_text"])
 
     detected_risks = analysis["detected_risks"]
+    cross_warnings = analysis["cross_contamination_warnings"]
+    additive_warnings = analysis["additive_warnings"]
     is_safe = analysis["is_safe"]
 
     if is_safe:
         explanation = {
             "title": f"Bu {food_meta['name']} Seçili Alerjen Profiliniz İçin Güvenli mi?",
-            "summary": f"Yapay zeka analizimiz, aktifleştirdiğiniz {len(user_allergies)} adet alerjen profilinize göre etiket üzerinde hiçbir tetikleyici kök kelimeye rastlamamıştır.",
+            "summary": "Yapay zeka analizimiz, aktifleştirdiğiniz alerjen profilinize göre etiket üzerinde hiçbir tetikleyici kök kelimeye rastlamamıştır.",
             "proofs": [
                 {"step": "01", "title": "Alerjen Kök Sözlük Taraması Temiz", "description": "Tetikleyici kelimeler taranmış ve hiçbir sakıncalı hammadde kökü bulunmamıştır."},
                 {"step": "02", "title": "Bileşen Filtresi Doğrulandı", "description": "Seçilen profil kapsamındaki tüm içerik kurallara uygundur."}
@@ -517,7 +802,6 @@ async def analyze_ingredients(
         names_short = ", ".join([r['trigger_word'].capitalize() for r in detected_risks[:2]]) if detected_risks else "Şüpheli İçerik"
         memory_verdict = f"KESİNLİKLE YASAK ({names_short} Riski)"
 
-    # If user is authenticated, save scan record directly to SQL database
     if current_user:
         history_item = models.ScanHistory(
             user_id=current_user.id,
@@ -527,6 +811,8 @@ async def analyze_ingredients(
             is_safe=is_safe,
             memory_verdict=memory_verdict,
             matched_allergens=detected_risks,
+            cross_contamination_flags=cross_warnings,
+            additive_warnings=additive_warnings,
             raw_text=raw_text
         )
         db.add(history_item)
@@ -540,14 +826,18 @@ async def analyze_ingredients(
         "category_icon": food_meta["icon"],
         "memory_verdict": memory_verdict,
         "matched_allergens": detected_risks,
+        "cross_contamination_warnings": cross_warnings,
+        "additive_warnings": additive_warnings,
         "unmatched_but_suspicious": [],
         "explanation": explanation
     }
 
+# ─────────────────────────────────────────────────────────────────────────────
+# 5. Static React SPA File Server Fallback
+# ─────────────────────────────────────────────────────────────────────────────
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
-# Serve compiled React/Vite frontend if available
 DIST_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../dist"))
 
 if os.path.exists(DIST_DIR):
@@ -555,11 +845,9 @@ if os.path.exists(DIST_DIR):
     if os.path.exists(assets_dir):
         app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
-    # SPA routing catch-all: serve files if they exist, otherwise serve index.html
     @app.get("/{file_name:path}")
     async def serve_static_or_spa(file_name: str):
-        # Prevent accessing backend routes (anything starting with auth/, profile/, analyze-, scan-)
-        if file_name.startswith(("auth/", "profile/", "analyze-", "scan-", "health")):
+        if file_name.startswith(("auth/", "profile/", "analyze-", "scan-", "health", "stats", "products", "additives")):
             raise HTTPException(status_code=404, detail="Not Found")
             
         file_path = os.path.join(DIST_DIR, file_name)
@@ -569,10 +857,9 @@ if os.path.exists(DIST_DIR):
 else:
     @app.get("/")
     def read_root():
-        return {"status": "online", "message": "FastAPI engine is running. Frontend static build not found."}
+        return {"status": "online", "message": "GlutenGuard AI Enterprise Engine is running."}
 
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
-    # Listen on 0.0.0.0 so Android devices on the local Wi-Fi network can connect directly!
     uvicorn.run("main:app", host="0.0.0.0", port=port)

@@ -19,14 +19,9 @@ export const ProfileScreen = ({ navigation }) => {
   const { user, selectedAllergens, updateAllergenPreferences, logoutUser } = useContext(AuthContext);
 
   const toggleAllergen = (id) => {
-    let updated;
-    if (selectedAllergens.includes(id)) {
-      // Keep gluten active for baseline Celiac safety if toggling gluten
-      updated = selectedAllergens.filter(item => item !== id);
-      if (id === 'gluten' && updated.length === 0) updated = ['gluten'];
-    } else {
-      updated = [...selectedAllergens, id];
-    }
+    const updated = selectedAllergens.includes(id)
+      ? selectedAllergens.filter(item => item !== id)
+      : [...selectedAllergens, id];
     updateAllergenPreferences(updated);
   };
 
@@ -35,7 +30,7 @@ export const ProfileScreen = ({ navigation }) => {
   };
 
   const clearAll = () => {
-    updateAllergenPreferences(['gluten']);
+    updateAllergenPreferences([]);
   };
 
   return (

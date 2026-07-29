@@ -67,6 +67,7 @@ export const ResultScreen = ({ route, navigation }) => {
       </View>
 
       {/* Matched Allergens with Trigger Words */}
+      {/* Matched Allergens with Trigger Words */}
       {matched_allergens.length > 0 && (
         <View style={styles.riskCard}>
           <View style={styles.riskHeader}>
@@ -85,6 +86,52 @@ export const ResultScreen = ({ route, navigation }) => {
                 )}
               </View>
               <Text style={styles.riskItemDesc}>{item.description}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Cross Contamination Trace Warnings */}
+      {cross_contamination_warnings && cross_contamination_warnings.length > 0 && (
+        <View style={[styles.riskCard, { borderColor: 'rgba(217, 119, 6, 0.4)' }]}>
+          <View style={styles.riskHeader}>
+            <Ionicons name="alert-circle-outline" size={22} color="#D97706" />
+            <Text style={[styles.riskTitle, { color: '#D97706' }]}>Çapraz Bulaşma / İz Miktarı Uyarıları ({cross_contamination_warnings.length})</Text>
+          </View>
+
+          {cross_contamination_warnings.map((item, idx) => (
+            <View key={idx} style={styles.riskItem}>
+              <View style={styles.riskItemTop}>
+                <Text style={styles.riskItemName}>{item.name}</Text>
+                {item.trigger_word && (
+                  <View style={[styles.triggerBadge, { backgroundColor: '#FEF3C7' }]}>
+                    <Text style={[styles.triggerText, { color: '#D97706' }]}>'{item.trigger_word}'</Text>
+                  </View>
+                )}
+              </View>
+              <Text style={styles.riskItemDesc}>{item.description}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {/* Additive E-Number Warnings */}
+      {additive_warnings && additive_warnings.length > 0 && (
+        <View style={styles.riskCard}>
+          <View style={styles.riskHeader}>
+            <Ionicons name="flask-outline" size={22} color="#2D5A43" />
+            <Text style={[styles.riskTitle, { color: '#2D5A43' }]}>Katkı Maddesi (E-Kodu) İncelemesi ({additive_warnings.length})</Text>
+          </View>
+
+          {additive_warnings.map((item, idx) => (
+            <View key={idx} style={styles.riskItem}>
+              <View style={styles.riskItemTop}>
+                <Text style={styles.riskItemName}>{item.e_code} - {item.name}</Text>
+                <View style={styles.triggerBadge}>
+                  <Text style={styles.triggerText}>{item.category}</Text>
+                </View>
+              </View>
+              <Text style={styles.riskItemDesc}>{item.description} {item.advice}</Text>
             </View>
           ))}
         </View>
