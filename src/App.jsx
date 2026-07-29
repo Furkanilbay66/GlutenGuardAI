@@ -338,21 +338,87 @@ const FOOD_TAKSONOMI_DATABASE = [
     ]
   },
 
-  // 4. TAZE ET & IZGARA YEMEKLERİ
+  // 6. DENİZ ÜRÜNLERİ & BALIKLAR
   {
-    id: "pirzola_biftek",
-    keywords: ["pirzola", "biftek", "antrikot", "bonfile", "steak", "ribeye", "t bone", "kuzu pirzola", "dana pirzola", "kulbasti"],
-    name: "Izgara Pirzola & Biftek Tabağı",
-    category: "Taze Et & Izgara Yemekleri",
-    icon: "🥩",
+    id: "seafood_dishes",
+    keywords: ["balik", "fish", "hamsi", "kalamar", "midye", "karides", "istakoz", "yengec", "ton baligi", "somon", "levrek", "cupra"],
+    name: "Taze Balık & Deniz Ürünleri Tabağı",
+    category: "Deniz Ürünleri & Balık",
+    icon: "🐟",
     components: [
-      { item: "Saf Pirzola / Biftek Eti", desc: "%100 Doğal taze et ham haliyle Gliadin (Gluten) ve Laktoz içermez, tam güvenlidir." },
-      { item: "Marinasyon & Soya Sosu Riski", desc: "Et marine edilirken soya sosu (Gluten/Soya) veya hazır bulyon çeşnisi kullanıldıysa dikkat edilmelidir." },
-      { item: "Kızgın Tereyağı Cızbız", desc: "Pişirim aşamasında dökülen kızgın tereyağı laktoz ve süt proteini kazein barındırır." },
-      { item: "Izgara Pide Çapraz Bulaşması", desc: "Ortak ızgarada pide/lavaş ısıtıldıysa gluten bulaşma riski vardır." }
+      { item: "Balık / Deniz Canlısı Eti", desc: "Deniz ürünleri alerjisi olan bireylerde doğrudan ana reaksiyon kaynağıdır. Ham balık eti glutensizdir." },
+      { item: "Mısır / Buğday Unu Tava Panesi", desc: "Hamsi ve kalamar kızartılırken un (Gluten) ile kaplanır." },
+      { item: "Karides Güveç Tereyağı & Peynir", desc: "Güveç pişiriminde kaşar peyniri ve tereyağı (Laktoz) kullanılır." }
     ]
   },
-  // 7. AMBALAJLI BİSKÜVİ, ÇİKOLATA, CİPS & İÇECEKLER
+
+  // 7. SEBZE, SALATA & ZEYTİNYAĞLILAR
+  {
+    id: "sebze_salata",
+    keywords: ["salata", "sebze", "zeytinyagli", "enginar", "fasulye", "brokoli", "ispanak", "karnabahar", "kabak", "semizotu", "sezar"],
+    name: "Taze Sebze & Salata Yemeği",
+    category: "Taze Sebze & Salata",
+    icon: "🥦",
+    components: [
+      { item: "Taze Organik Sebzeler", desc: "%100 Doğal taze sebzeler tamamen glutensiz ve laktozsuzdur." },
+      { item: "Salata Sosu & Mayonez", desc: "Sezar ve hazır salata soslarında yumurta sarısı ve hardal alerjenleri bulunabilir." },
+      { item: "Kruton Ekmek Parçaları", desc: "Salatalara eklenen çıtır ekmek parçaları (Kruton) buğday unu (Gluten) içerir." }
+    ]
+  },
+
+  // 8. MEYVE & DOĞAL İÇECEKLER
+  {
+    id: "meyve_dogal",
+    keywords: ["meyve", "elma", "muz", "portakal", "cilek", "karpuz", "kavun", "smoothie", "detoks", "taze sikma"],
+    name: "Taze Meyve & Doğal Meyve Suyu",
+    category: "Taze Meyve & İçecek",
+    icon: "🍎",
+    components: [
+      { item: "Doğal Meyve Fruktozu", desc: "%100 Doğal taze meyveler tamamen katkısız, glutensiz ve laktozsuzdur." },
+      { item: "Süt / Yoğurt Katkısı", desc: "Smoothie ve meyveli içeceklerde süt veya yoğurt (Laktoz) eklenebilir." }
+    ]
+  },
+
+  // 9. YUMURTA & KAHVALTILIKLAR
+  {
+    id: "yumurta_kahvalti",
+    keywords: ["yumurta", "omlet", "menemen", "sucuklu yumurta", "poyraz", "kaygana", "poche"],
+    name: "Taze Yumurta & Kahvaltılık Tabağı",
+    category: "Kahvaltılık & Yumurta",
+    icon: "🍳",
+    components: [
+      { item: "Saf Yumurta Albümini", desc: "Yumurta alerjisi olan bireyler için doğrudan ana alerjendir." },
+      { item: "Tereyağı & Beyaz Peynir", desc: "Menemen ve omlet pişiriminde kullanılan tereyağı ve peynir laktoz barındırır." }
+    ]
+  },
+
+  // 10. SULU EV YEMEKLERİ & GÜVEÇLER
+  {
+    id: "sulu_ev_yemekleri",
+    keywords: ["kuru fasulye", "nohut", "guvec", "musakka", "karniyarik", "türlü", "tavuk sote", "tas kebabi", "izmir kofte"],
+    name: "Ev Usulü Sulu Yemekler & Güveç",
+    category: "Sulu Yemek & Ev Yemeği",
+    icon: "🍲",
+    components: [
+      { item: "Bakliyat & Sebze İçeriği", desc: "Kuru fasulye, nohut ve sebzeler doğası gereği glutensizdir." },
+      { item: "Salça & Kıvam Unu Riski", desc: "Yemek suyuna kıvam bağlamak için kavrulmuş buğday unu eklenebilir." },
+      { item: "Tereyağ Sote", desc: "Soteleme esnasında kullanılan tereyağı laktoz içerir." }
+    ]
+  },
+
+  // 11. SÜT, YOĞURT & PEYNİRLER
+  {
+    id: "sut_peynir",
+    keywords: ["sut", "yogurt", "ayran", "kefir", "peynir", "kasar", "mozzarella", "lor", "tulum", "kaymak", "labne"],
+    name: "Süt, Yoğurt & Peynir Ürünleri",
+    category: "Süt & Süt Ürünleri",
+    icon: "🥛",
+    components: [
+      { item: "Süt Şekeri & Kazein Proteini", desc: "%100 Doğal laktoz ve süt proteini kazein içerir." }
+    ]
+  },
+
+  // 12. AMBALAJLI BİSKÜVİ, ÇİKOLATA, CİPS & İÇECEKLER
   {
     id: "cips_cerez",
     keywords: ["cips", "chips", "doritos", "ruffles", "lays", "cheetos", "pringles", "cerez", "kuruyemis"],
@@ -403,12 +469,12 @@ const FOOD_TAKSONOMI_DATABASE = [
   },
   {
     id: "icecek_sut",
-    keywords: ["icecek", "drink", "sut", "milk", "meyve suyu", "kola", "fanta", "sprite", "fuse tea", "icetea", "smoothie", "kahve"],
+    keywords: ["icecek", "drink", "meyve suyu", "kola", "fanta", "sprite", "fuse tea", "icetea", "smoothie", "kahve"],
     name: "İçecek & Sütlü İçecek",
     category: "İçecek & Süt Ürünleri",
     icon: "🥤",
     components: [
-      { item: "Süt & Laktoz", desc: "Aromalı sütlerde yüksek laktoz oranı bulunur." },
+      { item: "Aroma & Şeker Şurubu", desc: "İçeceklerde aroma verici bileşenler bulunur." },
       { item: "Karamel Renklendirici (E150d)", desc: "Kola ve soğuk çaylarda arpa maltından elde edilen karamel renklendirici bulunabilir." }
     ]
   }
@@ -427,14 +493,19 @@ const cleanFilenameToTitleLocal = (filename) => {
 
   if (clean.includes("pirzola")) return "Izgara Pirzola Et Tabağı";
   if (clean.includes("biftek") || clean.includes("antrikot") || clean.includes("bonfile") || clean.includes("steak")) return "Izgara Biftek / Antrikot Tabağı";
-  if (clean.includes("kofte")) return "Izgara Köfte Tabağı";
-  if (clean.includes("burger") || clean.includes("hamburger")) return "Hamburger / Cheeseburger Menü";
+  if (clean.includes("tavuk") || clean.includes("chicken") || clean.includes("nugget") || clean.includes("sinitzel") || clean.includes("kanat")) return "Kızarmış / Izgara Tavuk Menü";
+  if (clean.includes("balik") || clean.includes("hamsi") || clean.includes("somon") || clean.includes("kalamar") || clean.includes("midye") || clean.includes("karides")) return "Taze Balık & Deniz Ürünleri Tabağı";
+  if (clean.includes("kofte") || clean.includes("meatball")) return "Izgara / Ev Köftesi Tabağı";
+  if (clean.includes("burger") || clean.includes("hamburger") || clean.includes("whopper")) return "Hamburger / Cheeseburger Menü";
   if (clean.includes("doner") || clean.includes("iskender")) return "Döner / İskender Dürüm";
   if (clean.includes("pizza")) return "Pizza Çeşitleri";
   if (clean.includes("lahmacun")) return "Çıtır Lahmacun";
   if (clean.includes("pide")) return "Geleneksel Pide Çeşitleri";
-  if (clean.includes("borek") || clean.includes("pogaca")) return "Pastane Börek & Poğaça";
-  if (clean.includes("corba")) return "Çorba Çeşidi";
+  if (clean.includes("borek") || clean.includes("pogaca") || clean.includes("acma") || clean.includes("simit")) return "Pastane Börek & Poğaça";
+  if (clean.includes("corba") || clean.includes("soup")) return "Geleneksel Çorba Çeşidi";
+  if (clean.includes("salata") || clean.includes("sebze") || clean.includes("zeytinyagli")) return "Taze Sebze & Salata Yemeği";
+  if (clean.includes("yumurta") || clean.includes("omlet") || clean.includes("menemen")) return "Taze Yumurta & Kahvaltılık Tabağı";
+  if (clean.includes("sutlac") || clean.includes("baklava") || clean.includes("kadayif") || clean.includes("pasta") || clean.includes("kek")) return "Pastane & Geleneksel Tatlı";
 
   const words = clean.split(' ').filter(w => !LOCAL_FILLER_WORDS.has(w) && w.length > 1);
   if (words.length > 0) {
@@ -459,12 +530,29 @@ const inferDynamicFoodData = (text, fileName = "") => {
   }
 
   const customTitle = cleanFilenameToTitleLocal(fileName);
+
+  const isPackagedHint = ["icindekiler", "ingredients", "ambalaj", "paket", "kod", "e322", "e621", "gram", "net", "son kullanma"].some(k => (text + " " + fileName).toLowerCase().includes(k));
+
+  if (isPackagedHint) {
+    return {
+      category: "Ambalajlı İçerik & Atıştırmalık",
+      icon: "🍱",
+      name: customTitle,
+      components: [
+        { item: "Buğday Unu, Nişasta & Malt Ekstraktı", desc: "Gıda bağlayıcısı ve hacim artırıcı olarak buğday unu, modifiye nişasta (Gluten) kullanılabilir." },
+        { item: "Süt Tozu & Peynir Altı Suyu (Whey)", desc: "Aroma lezzeti için peynir altı suyu tozu ve süt proteini (Laktoz & Kazein) içerebilir." },
+        { item: "Soya Lesitini (E322) & Katkılar", desc: "Emülgatör olarak soya türevleri ve kıvam artırıcı E-kodları barındırabilir." },
+        { item: "Tesis Çapraz Bulaşma Uyarısı", desc: "Ortak imalat bandında fındık, fıstık, susam ve yumurta işlenme riski mevcuttur." }
+      ]
+    };
+  }
+
   return {
     category: "Taze Yemek & Yöresel Mutfak",
     icon: "🍲",
     name: customTitle,
     components: [
-      { item: "Taze Et / Hammadde Doğallığı", desc: "Doğal işlenmemiş taze ürünler katkı ve gluten barındırmaz." },
+      { item: "Taze Hammadde Doğallığı", desc: "%100 Doğal işlenmemiş hammaddeler katkı ve gluten barındırmaz." },
       { item: "Sote & Sos Marinasyonu", desc: "Yemek marinasyonunda soya sosu veya unlu sos bağlayıcılar eklenebilir." },
       { item: "Kızartma & Tereyağı Yağı", desc: "Lezzetlendirmede kullanılan tereyağı laktoz ve süt proteini kazein içerir." },
       { item: "Servis Pidesi & Çapraz Bulaşma", desc: "Restoran mutfağında unlu mamullerle ortak alanda hazırlanma riski mevcuttur." }

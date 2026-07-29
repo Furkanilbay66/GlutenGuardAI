@@ -562,34 +562,87 @@ FOOD_TAKSONOMI_DATABASE = [
         ]
     },
 
-    # 6. DENİZ ÜRÜNLERİ
+    # 6. DENİZ ÜRÜNLERİ & BALIKLAR
     {
         "id": "seafood_dishes",
-        "keywords": ["balik", "fish", "hamsi", "kalamar", "midye", "karides", "istakoz", "yengec", "ton baligi", "somon"],
-        "name": "Deniz Ürünleri & Balık Yemekleri",
+        "keywords": ["balik", "fish", "hamsi", "kalamar", "midye", "karides", "istakoz", "yengec", "ton baligi", "somon", "levrek", "cupra"],
+        "name": "Taze Balık & Deniz Ürünleri Tabağı",
         "category": "Deniz Ürünleri & Balık",
         "icon": "🐟",
         "components": [
-            {"item": "Balık / Deniz Canlısı", "risk": "seafood", "desc": "Deniz ürünleri alerjisi olan bireylerde doğrudan ana reaksiyon kaynağıdır."},
+            {"item": "Balık / Deniz Canlısı Eti", "risk": "seafood", "desc": "Deniz ürünleri alerjisi olan bireylerde doğrudan ana reaksiyon kaynağıdır. Ham balık eti glutensizdir."},
             {"item": "Mısır / Buğday Unu Tava Panesi", "risk": "gluten", "desc": "Hamsi ve kalamar kızartılırken un (Gluten) ile kaplanır."},
-            {"item": "Karides Güveç Tereyağı", "risk": "lactose", "desc": "Güveç pişiriminde kaşar peyniri ve tereyağı (Laktoz) kullanılır."}
+            {"item": "Karides Güveç Tereyağı & Peynir", "risk": "lactose", "desc": "Güveç pişiriminde kaşar peyniri ve tereyağı (Laktoz) kullanılır."}
         ]
     },
 
-    # 4. TAZET ET & KEBAPLAR
+    # 7. SEBZE, SALATA & ZEYTİNYAĞLILAR
     {
-        "id": "pirzola_biftek",
-        "keywords": ["pirzola", "biftek", "antrikot", "bonfile", "steak", "ribeye", "t bone", "kuzu pirzola", "dana pirzola", "kulbasti"],
-        "name": "Izgara Pirzola & Biftek Tabağı",
-        "category": "Taze Et & Izgara Yemekleri",
-        "icon": "🥩",
+        "id": "sebze_salata",
+        "keywords": ["salata", "sebze", "zeytinyagli", "enginar", "fasulye", "brokoli", "ispanak", "karnabahar", "kabak", "semizotu", "sezar"],
+        "name": "Taze Sebze & Salata Yemeği",
+        "category": "Taze Sebze & Salata",
+        "icon": "🥦",
         "components": [
-            {"item": "Saf Pirzola / Biftek Eti", "risk": "safe_meat", "desc": "%100 Doğal taze et ham haliyle Gliadin (Gluten) ve Laktoz içermez, tam güvenlidir."},
-            {"item": "Marinasyon & Soya Sosu Riski", "risk": "gluten_soy", "desc": "Et marine edilirken soya sosu (Gluten/Soya) veya hazır bulyon çeşnisi kullanıldıysa dikkat edilmelidir."},
-            {"item": "Kızgın Tereyağı Cızbız", "risk": "lactose", "desc": "Pişirim aşamasında dökülen kızgın tereyağı laktoz ve süt proteini kazein barındırır."},
-            {"item": "Izgara Pide Çapraz Bulaşması", "risk": "cross_contamination", "desc": "Ortak ızgarada pide/lavaş ısıtıldıysa gluten bulaşma riski vardır."}
+            {"item": "Taze Organik Sebzeler", "risk": "safe_veggie", "desc": "%100 Doğal taze sebzeler tamamen glutensiz ve laktozsuzdur."},
+            {"item": "Salata Sosu & Mayonez", "risk": "egg_mustard", "desc": "Sezar ve hazır salata soslarında yumurta sarısı ve hardal alerjenleri bulunabilir."},
+            {"item": "Kruton Ekmek Parçaları", "risk": "gluten", "desc": "Salatalara eklenen çıtır ekmek parçaları (Kruton) buğday unu (Gluten) içerir."}
         ]
     },
+
+    # 8. MEYVE & DOĞAL İÇECEKLER
+    {
+        "id": "meyve_dogal",
+        "keywords": ["meyve", "elma", "muz", "portakal", "cilek", "karpuz", "kavun", "smoothie", "detoks", "taze sikma"],
+        "name": "Taze Meyve & Doğal Meyve Suyu",
+        "category": "Taze Meyve & İçecek",
+        "icon": "🍎",
+        "components": [
+            {"item": "Doğal Meyve Fruktozu", "risk": "safe_fruit", "desc": "%100 Doğal taze meyveler tamamen katkısız, glutensiz ve laktozsuzdur."},
+            {"item": "Süt / Yoğurt Katkısı", "risk": "lactose", "desc": "Smoothie ve meyveli içeceklerde süt veya yoğurt (Laktoz) eklenebilir."}
+        ]
+    },
+
+    # 9. YUMURTA & KAHVALTILIKLAR
+    {
+        "id": "yumurta_kahvalti",
+        "keywords": ["yumurta", "omlet", "menemen", "sucuklu yumurta", "poyraz", "kaygana", "poche"],
+        "name": "Taze Yumurta & Kahvaltılık Tabağı",
+        "category": "Kahvaltılık & Yumurta",
+        "icon": "🍳",
+        "components": [
+            {"item": "Saf Yumurta Albümini", "risk": "egg", "desc": "Yumurta alerjisi olan bireyler için doğrudan ana alerjendir."},
+            {"item": "Tereyağı & Beyaz Peynir", "risk": "lactose", "desc": "Menemen ve omlet pişiriminde kullanılan tereyağı ve peynir laktoz barındırır."}
+        ]
+    },
+
+    # 10. SULU EV YEMEKLERİ & GÜVEÇLER
+    {
+        "id": "sulu_ev_yemekleri",
+        "keywords": ["kuru fasulye", "nohut", "guvec", "musakka", "karniyarik", "türlü", "tavuk sote", "tas kebabi", "izmir kofte"],
+        "name": "Ev Usulü Sulu Yemekler & Güveç",
+        "category": "Sulu Yemek & Ev Yemeği",
+        "icon": "🍲",
+        "components": [
+            {"item": "Bakliyat & Sebze İçeriği", "risk": "safe_legume", "desc": "Kuru fasulye, nohut ve sebzeler doğası gereği glutensizdir."},
+            {"item": "Salça & Kıvam Unu Riski", "risk": "gluten", "desc": "Yemek suyuna kıvam bağlamak için kavrulmuş buğday unu eklenebilir."},
+            {"item": "Tereyağ Sote", "risk": "lactose", "desc": "Soteleme esnasında kullanılan tereyağı laktoz içerir."}
+        ]
+    },
+
+    # 11. SÜT, YOĞURT & PEYNİRLER
+    {
+        "id": "sut_peynir",
+        "keywords": ["sut", "yogurt", "ayran", "kefir", "peynir", "kasar", "mozzarella", "lor", "tulum", "kaymak", "labne"],
+        "name": "Süt, Yoğurt & Peynir Ürünleri",
+        "category": "Süt & Süt Ürünleri",
+        "icon": "🥛",
+        "components": [
+            {"item": "Süt Şekeri & Kazein Proteini", "risk": "lactose", "desc": "%100 Doğal laktoz ve süt proteini kazein içerir."}
+        ]
+    },
+
+    # 12. AMBALAJLI BİSKÜVİ, ÇİKOLATA, CİPS & İÇECEKLER
     {
         "id": "cips_cerez",
         "keywords": ["cips", "chips", "doritos", "ruffles", "lays", "cheetos", "pringles", "cerez", "kuruyemis"],
@@ -640,12 +693,12 @@ FOOD_TAKSONOMI_DATABASE = [
     },
     {
         "id": "icecek_sut",
-        "keywords": ["icecek", "drink", "sut", "milk", "meyve suyu", "kola", "fanta", "sprite", "fuse tea", "icetea", "smoothie", "kahve"],
+        "keywords": ["icecek", "drink", "meyve suyu", "kola", "fanta", "sprite", "fuse tea", "icetea", "smoothie", "kahve"],
         "name": "İçecek & Sütlü İçecek",
         "category": "İçecek & Süt Ürünleri",
         "icon": "🥤",
         "components": [
-            {"item": "Süt & Laktoz", "risk": "lactose", "desc": "Aromalı sütlerde yüksek laktoz oranı bulunur."},
+            {"item": "Aroma & Şeker Şurubu", "risk": "lactose", "desc": "İçeceklerde aroma verici bileşenler bulunur."},
             {"item": "Karamel Renklendirici (E150d)", "risk": "gluten", "desc": "Kola ve soğuk çaylarda arpa maltından elde edilen karamel renklendirici bulunabilir."}
         ]
     }
@@ -668,9 +721,13 @@ def clean_filename_to_title(filename: str) -> str:
         return "Izgara Pirzola Et Tabağı"
     if any(k in name_clean for k in ["biftek", "antrikot", "bonfile", "steak"]):
         return "Izgara Biftek / Antrikot Tabağı"
-    if "kofte" in name_clean:
-        return "Izgara Köfte Tabağı"
-    if any(k in name_clean for k in ["burger", "hamburger"]):
+    if any(k in name_clean for k in ["tavuk", "chicken", "nugget", "sinitzel", "kanat"]):
+        return "Kızarmış / Izgara Tavuk Menü"
+    if any(k in name_clean for k in ["balik", "hamsi", "somon", "kalamar", "midye", "karides"]):
+        return "Taze Balık & Deniz Ürünleri Tabağı"
+    if any(k in name_clean for k in ["kofte", "meatball"]):
+        return "Izgara / Ev Köftesi Tabağı"
+    if any(k in name_clean for k in ["burger", "hamburger", "whopper"]):
         return "Hamburger / Cheeseburger Menü"
     if any(k in name_clean for k in ["doner", "iskender"]):
         return "Döner / İskender Dürüm"
@@ -680,10 +737,16 @@ def clean_filename_to_title(filename: str) -> str:
         return "Çıtır Lahmacun"
     if "pide" in name_clean:
         return "Geleneksel Pide Çeşitleri"
-    if any(k in name_clean for k in ["borek", "pogaca"]):
+    if any(k in name_clean for k in ["borek", "pogaca", "acma", "simit"]):
         return "Pastane Börek & Poğaça"
-    if "corba" in name_clean:
-        return "Çorba Çeşidi"
+    if any(k in name_clean for k in ["corba", "soup"]):
+        return "Geleneksel Çorba Çeşidi"
+    if any(k in name_clean for k in ["salata", "sebze", "zeytinyagli"]):
+        return "Taze Sebze & Salata Yemeği"
+    if any(k in name_clean for k in ["yumurta", "omlet", "menemen"]):
+        return "Taze Yumurta & Kahvaltılık Tabağı"
+    if any(k in name_clean for k in ["sutlac", "baklava", "kadayif", "pasta", "kek"]):
+        return "Pastane & Geleneksel Tatlı"
 
     words = [w for w in name_clean.split() if w not in FILLER_WORDS and len(w) > 1]
     if words:
@@ -703,12 +766,28 @@ def infer_food_name_and_category(norm_text: str, filename: str = "") -> dict:
             }
 
     custom_title = clean_filename_to_title(filename)
+
+    is_packaged_hint = any(k in (norm_text + " " + filename).lower() for k in ["icindekiler", "ingredients", "ambalaj", "paket", "kod", "e322", "e621", "gram", "net", "son kullanma"])
+
+    if is_packaged_hint:
+        return {
+            "name": custom_title,
+            "category": "Ambalajlı İçerik & Atıştırmalık",
+            "icon": "🍱",
+            "components": [
+                {"item": "Buğday Unu, Nişasta & Malt Ekstraktı", "risk": "gluten", "desc": "Gıda bağlayıcısı ve hacim artırıcı olarak buğday unu, modifiye nişasta (Gluten) kullanılabilir."},
+                {"item": "Süt Tozu & Peynir Altı Suyu (Whey)", "risk": "lactose", "desc": "Aroma lezzeti için peynir altı suyu tozu ve süt proteini (Laktoz & Kazein) içerebilir."},
+                {"item": "Soya Lesitini (E322) & Katkılar", "risk": "soy", "desc": "Emülgatör olarak soya türevleri ve kıvam artırıcı E-kodları barındırabilir."},
+                {"item": "Tesis Çapraz Bulaşma Uyarısı", "risk": "cross_contamination", "desc": "Ortak imalat bandında fındık, fıstık, susam ve yumurta işlenme riski mevcuttur."}
+            ]
+        }
+
     return {
         "name": custom_title,
         "category": "Taze Yemek & Yöresel Mutfak",
         "icon": "🍲",
         "components": [
-            {"item": "Taze Et / Hammadde Doğallığı", "risk": "safe_meat", "desc": "Doğal işlenmemiş taze ürünler katkı ve gluten barındırmaz."},
+            {"item": "Taze Hammadde Doğallığı", "risk": "safe_meat", "desc": "%100 Doğal işlenmemiş hammaddeler katkı ve gluten barındırmaz."},
             {"item": "Sote & Sos Marinasyonu", "risk": "gluten_soy", "desc": "Yemek marinasyonunda soya sosu veya unlu sos bağlayıcılar eklenebilir."},
             {"item": "Kızartma & Tereyağı Yağı", "risk": "lactose", "desc": "Lezzetlendirmede kullanılan tereyağı laktoz ve süt proteini kazein içerir."},
             {"item": "Servis Pidesi & Çapraz Bulaşma", "risk": "cross_contamination", "desc": "Restoran mutfağında unlu mamullerle ortak alanda hazırlanma riski mevcuttur."}
