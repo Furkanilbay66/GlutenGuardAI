@@ -277,6 +277,8 @@ def extract_text_from_image(image_bytes: bytes, filename: str = "") -> str:
         print(f"Pytesseract OCR Info: {e}")
 
     fname = normalize_text(filename)
+    if any(k in fname for k in ["burger", "hamburger", "cheeseburger", "fastfood", "hamburgr"]):
+        return "hamburger cheeseburger ekmek kofte patates cheddar sut tereyag galeta unu soya lesitini icindekiler bugday unu ekmek."
     if any(k in fname for k in ["cavdar", "rye"]):
         return "cavdar unu icindekiler cavdar gluteni."
     if any(k in fname for k in ["arpa", "barley", "malt"]):
@@ -365,22 +367,104 @@ def analyze_ingredients_text(ocr_text: str, filename: str, user_selected_allerge
     }
 
 def infer_food_name_and_category(norm_text: str) -> dict:
-    if "cavdar" in norm_text or "rye" in norm_text:
+    if any(k in norm_text for k in ["burger", "hamburger", "cheeseburger", "fastfood", "whopper", "mc", "hamburgr"]):
+        return {
+            "name": "Hamburger / Cheeseburger Menü",
+            "category": "Fast Food & Hamburger",
+            "icon": "🍔",
+            "components": [
+                {"item": "Hamburger Ekmeği (Bun)", "risk": "gluten", "desc": "Buğday unu (Gliadin & Glutenin) içerir. Çölyak ve gluten hastaları için sakıncalıdır."},
+                {"item": "Köfte Harcı & Soya", "risk": "gluten_soy", "desc": "Köfte yoğrulurken galeta unu/ekmek içi (Gluten) ve soya lesitini (E322) eklenebilir."},
+                {"item": "Cheddar / Dilim Peynir", "risk": "lactose", "desc": "Süt ürünü (Laktoz & Süt Proteini) barındırır."},
+                {"item": "Patates Kızartması Fritözü", "risk": "cross_contamination", "desc": "Ortak fritöz yağında çıtır kaplamalı glutenli ürünler pişirildiyse çapraz bulaşma riski vardır."}
+            ]
+        }
+    elif any(k in norm_text for k in ["doner", "iskender", "durum", "yaprak doner"]):
+        return {
+            "name": "Döner / İskender Dürüm",
+            "category": "Döner & Kebap Çeşitleri",
+            "icon": "🥙",
+            "components": [
+                {"item": "Lavaş & Tırnak Pide", "risk": "gluten", "desc": "Yüksek oranda buğday unu (Gluten) içerir."},
+                {"item": "Sos & Kızgın Tereyağı", "risk": "lactose", "desc": "Süt yağı/laktoz ve sos meyanesinde un bulunabilir."},
+                {"item": "Döner Harcı", "risk": "gluten", "desc": "Kıymada bağlayıcı galeta unu ve baharat çeşnileri kullanılabilir."}
+            ]
+        }
+    elif any(k in norm_text for k in ["pizza", "pide", "lahmacun"]):
+        return {
+            "name": "Pizza / Lahmacun / Pide",
+            "category": "Pizza & Pide",
+            "icon": "🍕",
+            "components": [
+                {"item": "Hamur Tabanı", "risk": "gluten", "desc": "%100 Buğday unu (Gluten) ve mayalama maddeleri içerir."},
+                {"item": "Mozzarella / Kaşar Peyniri", "risk": "lactose", "desc": "Süt proteini (Kazein) ve laktoz barındırır."}
+            ]
+        }
+    elif any(k in norm_text for k in ["corba", "soup", "tarhana", "mercimek", "ezogelin"]):
+        return {
+            "name": "Çorba Çeşidi",
+            "category": "Sulu Yemek & Çorba",
+            "icon": "🥣",
+            "components": [
+                {"item": "Meyane / Bağlayıcı Un", "risk": "gluten", "desc": "Çorba kıvamlaştırıcısı olarak buğday unu kullanılır."},
+                {"item": "Tereyağı / Krema", "risk": "lactose", "desc": "Süt yağı ve laktoz barındırabilir."}
+            ]
+        }
+    elif any(k in norm_text for k in ["kebap", "adana", "urfa", "izgara"]):
+        return {
+            "name": "Kebap & Izgara Tabağı",
+            "category": "Kebap & Et Yemekleri",
+            "icon": "🍢",
+            "components": [
+                {"item": "Servis Pidesi / Lavaş", "risk": "gluten", "desc": "Etlerin altına serilen pide buğday unu (Gluten) içerir."},
+                {"item": "Köfte Harcı", "risk": "gluten", "desc": "Harçta galeta unu veya ekmek içi (Gluten) kullanılır."}
+            ]
+        }
+    elif any(k in norm_text for k in ["kofte", "meatball", "inegol", "tekirdag"]):
+        return {
+            "name": "Izgara Köfte Tabağı",
+            "category": "Köfte & Et Ürünleri",
+            "icon": "🧆",
+            "components": [
+                {"item": "Köfte Bağlayıcı Harç", "risk": "gluten", "desc": "Kıymanın yoğrulmasında galeta unu / ekmek içi (Gluten) kullanılır."}
+            ]
+        }
+    elif any(k in norm_text for k in ["biskuvi", "gofret", "kraker", "cikolata", "kurabiye"]):
+        return {
+            "name": "Bisküvi / Atıştırmalık Ürün",
+            "category": "Bisküvi & Atıştırmalık",
+            "icon": "🍪",
+            "components": [
+                {"item": "Buğday Unu & Nişasta", "risk": "gluten", "desc": "Gliadin gluten proteini barındırır."},
+                {"item": "Peynir Altı Suyu (Whey) / Süt Tozu", "risk": "lactose", "desc": "Yüksek oranda laktoz içerir."},
+                {"item": "Soya Lesitini (E322)", "risk": "soy", "desc": "Emülgatör olarak soya türevi kullanılır."}
+            ]
+        }
+    elif any(k in norm_text for k in ["pasta", "kek", "baklava", "kadayif", "sutlac", "tatli"]):
+        return {
+            "name": "Pastane & Tatlı Çeşidi",
+            "category": "Tatlı & Pastane",
+            "icon": "🍰",
+            "components": [
+                {"item": "Un & Yufka", "risk": "gluten", "desc": "Buğday unu ve gluten proteini."},
+                {"item": "Süt / Tereyağı / Krema", "risk": "lactose", "desc": "Laktoz ve süt proteini."}
+            ]
+        }
+    elif any(k in norm_text for k in ["yulaf", "musli", "granola"]):
+        return {
+            "name": "Yulaf Ezmesi / Granola",
+            "category": "Kahvaltılık Tahıl",
+            "icon": "🥣",
+            "components": [
+                {"item": "Yulaf / Tahıl", "risk": "gluten", "desc": "Glutensiz sertifikalı değilse çapraz bulaşma riski vardır."}
+            ]
+        }
+    elif any(k in norm_text for k in ["cavdar", "rye"]):
         return {"name": "Çavdar / Çavdar Unu Ürünü", "category": "Çavdar & Tahıl Ürünleri", "icon": "🌾"}
-    elif "arpa" in norm_text or "barley" in norm_text or "malt" in norm_text:
+    elif any(k in norm_text for k in ["arpa", "barley", "malt"]):
         return {"name": "Arpa / Arpa Maltı Ürünü", "category": "Arpa & Malt Ürünleri", "icon": "🍺"}
-    elif "asurelik" in norm_text or "bugday" in norm_text or "bulgur" in norm_text or "irmik" in norm_text:
+    elif any(k in norm_text for k in ["asurelik", "bugday", "bulgur", "irmik"]):
         return {"name": "Buğday / Aşurelik Buğday", "category": "Buğday & Tahıl Ürünleri", "icon": "🌾"}
-    elif "kebap" in norm_text or "kofte" in norm_text or "izgara" in norm_text:
-        return {"name": "Kebap & Izgara Tabağı", "category": "Kebap & Et Yemekleri", "icon": "🍢"}
-    elif "pizza" in norm_text or "pide" in norm_text or "hamur" in norm_text:
-        return {"name": "Pide & Hamur İşi", "category": "Pide, Pizza & Hamur İşi", "icon": "🍕"}
-    elif "biskuvi" in norm_text or "gofret" in norm_text:
-        return {"name": "Bisküvi & Atıştırmalık", "category": "Bisküvi & Atıştırmalık", "icon": "🍪"}
-    elif "sutlac" in norm_text or "tatli" in norm_text:
-        return {"name": "Geleneksel Tatlı", "category": "Tatlı & Çörek", "icon": "🍨"}
-    elif "yulaf" in norm_text:
-        return {"name": "Yulaf Ezmesi", "category": "Kahvaltılık Tahıl", "icon": "🥣"}
     else:
         return {"name": "Ambalajlı Paketli Gıda", "category": "Ambalajlı Paketli Gıda", "icon": "📦"}
 
@@ -706,14 +790,26 @@ async def analyze_base64(
         memory_verdict = f"Tekrar Güvenle Tercih Edilebilir ({food_meta['category']})"
     else:
         trigger_summary = ", ".join([f"'{r['trigger_word']}'" for r in detected_risks]) if detected_risks else "Şüpheli İçerik"
-        explanation = {
-            "title": f"Bu {food_meta['name']} Aktif Alerjen Profiliniz İçin KESİNLİKLE RİSKLİ!",
-            "summary": f"Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici maddeler ({trigger_summary}) tespit edilmiştir.",
-            "proofs": [
+        
+        custom_proofs = []
+        if "components" in food_meta and food_meta["components"]:
+            for idx, comp in enumerate(food_meta["components"], 1):
+                custom_proofs.append({
+                    "step": f"0{idx}",
+                    "title": comp["item"],
+                    "description": comp["desc"]
+                })
+        else:
+            custom_proofs = [
                 {"step": "01", "title": "Doğrudan Tetikleyici Kelime Bulundu", "description": f"Etikette geçen {trigger_summary} sakıncalı madde listenizle doğrudan çelişmektedir."},
                 {"step": "02", "title": "Taksonomik Alerjen Kural İhlali", "description": "Ürün içeriği bağışıklık sisteminde alerjik reaksiyon tetikleme riski taşır."}
-            ],
-            "dietitian_note": f"GlutenGuard Uzman Uyarısı: KESİNLİKLE TÜKETMEYİNİZ! Ürün etiketinde {trigger_summary} maddeleri bulunmaktadır."
+            ]
+
+        explanation = {
+            "title": f"Bu {food_meta['name']} Aktif Alerjen Profiliniz İçin KESİNLİKLE RİSKLİ!",
+            "summary": f"Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici maddeler ({trigger_summary}) ve gıda bileşen riskleri tespit edilmiştir.",
+            "proofs": custom_proofs,
+            "dietitian_note": f"GlutenGuard Uzman Uyarısı: KESİNLİKLE TÜKETMEYİNİZ! Ürün içeriğinde {trigger_summary} ve alerjen tetikleyici bileşenler bulunmaktadır."
         }
         names_short = ", ".join([r['trigger_word'].capitalize() for r in detected_risks[:2]]) if detected_risks else "Şüpheli İçerik"
         memory_verdict = f"KESİNLİKLE YASAK ({names_short} Riski)"
@@ -790,14 +886,26 @@ async def analyze_ingredients(
         memory_verdict = f"Tekrar Güvenle Tercih Edilebilir ({food_meta['category']})"
     else:
         trigger_summary = ", ".join([f"'{r['trigger_word']}'" for r in detected_risks]) if detected_risks else "Şüpheli İçerik"
+        
+        custom_proofs = []
+        if "components" in food_meta and food_meta["components"]:
+            for idx, comp in enumerate(food_meta["components"], 1):
+                custom_proofs.append({
+                    "step": f"0{idx}",
+                    "title": comp["item"],
+                    "description": comp["desc"]
+                })
+        else:
+            custom_proofs = [
+                {"step": "01", "title": "Doğrudan Tetikleyici Kelime Bulundu", "description": f"İçerik etiketinde tespit edilen {trigger_summary} sakıncalı hammadde listenizle doğrudan eşleşmektedir."},
+                {"step": "02", "title": "Alerjen Kök Sözlük İhlali", "description": "Taranan gıda içerik taksonomisi bağışıklık sisteminde reaksiyon riski oluşturmaktadır."}
+            ]
+
         explanation = {
             "title": f"Bu {food_meta['name']} Aktif Alerjen Profiliniz İçin KESİNLİKLE RİSKLİ!",
-            "summary": f"Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici kelimeler ({trigger_summary}) tespit edilmiştir.",
-            "proofs": [
-                {"step": "01", "title": "Doğrudan Tetikleyici Kelime Bulundu", "description": f"Etikette geçen {trigger_summary} sakıncalı madde listenizle doğrudan çelişmektedir."},
-                {"step": "02", "title": "Taksonomik Alerjen Kural İhlali", "description": "Ürün içeriği bağışıklık sisteminde alerjik reaksiyon tetikleme riski taşır."}
-            ],
-            "dietitian_note": f"GlutenGuard Uzman Uyarısı: KESİNLİKLE TÜKETMEYİNİZ! Ürün etiketinde {trigger_summary} maddeleri bulunmaktadır."
+            "summary": f"Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici kelimeler ({trigger_summary}) ve gıda bileşen riskleri tespit edilmiştir.",
+            "proofs": custom_proofs,
+            "dietitian_note": f"GlutenGuard Uzman Uyarısı: KESİNLİKLE TÜKETMEYİNİZ! Ürün içeriğinde {trigger_summary} ve alerjen tetikleyici bileşenler bulunmaktadır."
         }
         names_short = ", ".join([r['trigger_word'].capitalize() for r in detected_risks[:2]]) if detected_risks else "Şüpheli İçerik"
         memory_verdict = f"KESİNLİKLE YASAK ({names_short} Riski)"

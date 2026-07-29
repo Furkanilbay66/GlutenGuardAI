@@ -3,11 +3,16 @@
     "name": "GlutenGuard AI",
     "slug": "glutenguard-ai-mobile",
     "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "scheme": "glutenguard",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "jsEngine": "jsc",
+    "jsEngine": "hermes",
     "splash": {
       "backgroundColor": "#F4F3EF"
+    },
+    "ios": {
+      "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {

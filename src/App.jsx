@@ -130,22 +130,123 @@ const analyzeIngredientsTextLocal = (ocrText, fileName, userSelectedAllergens) =
 
 const inferDynamicFoodData = (text, fileName = "") => {
   const norm = normalizeLocalText(text + " " + fileName);
+
+  if (norm.includes("burger") || norm.includes("hamburger") || norm.includes("cheeseburger") || norm.includes("fastfood") || norm.includes("whopper") || norm.includes("mc")) {
+    return {
+      category: "Fast Food & Hamburger",
+      icon: "🍔",
+      name: "Hamburger / Cheeseburger Menü",
+      components: [
+        { item: "Hamburger Ekmeği (Bun)", desc: "Buğday unu (Gliadin & Glutenin) içerir. Gluten hastaları için kesinlikle sakıncalıdır." },
+        { item: "Köfte Harcı & Soya", desc: "Köfte yoğrulurken galeta unu/ekmek içi (Gluten) ve soya lesitini (E322) eklenebilir." },
+        { item: "Cheddar / Dilim Peynir", desc: "Süt ürünü (Laktoz & Kazein proteini) barındırır." },
+        { item: "Patates Kızartması Fritözü", desc: "Ortak fritöz yağında gluten kaplamalı çıtır ürünler pişirildiyse çapraz bulaşma riski vardır." }
+      ]
+    };
+  }
+
+  if (norm.includes("doner") || norm.includes("iskender") || norm.includes("durum") || norm.includes("yaprak doner")) {
+    return {
+      category: "Döner & Kebap Çeşitleri",
+      icon: "🥙",
+      name: "Döner / İskender Dürüm",
+      components: [
+        { item: "Lavaş & Tırnak Pide", desc: "Yüksek oranda buğday unu (Gluten) içerir." },
+        { item: "Sos & Kızgın Tereyağı", desc: "Süt yağı/laktoz ve sos meyanesinde un bulunabilir." },
+        { item: "Döner Harcı", desc: "Kıymada bağlayıcı galeta unu ve baharat çeşnileri kullanılabilir." }
+      ]
+    };
+  }
+
+  if (norm.includes("pizza") || norm.includes("pide") || norm.includes("lahmacun")) {
+    return {
+      category: "Pizza & Pide",
+      icon: "🍕",
+      name: "Pizza / Lahmacun / Pide",
+      components: [
+        { item: "Hamur Tabanı", desc: "%100 Buğday unu (Gluten) ve mayalama maddeleri içerir." },
+        { item: "Mozzarella / Kaşar Peyniri", desc: "Süt proteini (Kazein) ve laktoz barındırır." }
+      ]
+    };
+  }
+
+  if (norm.includes("corba") || norm.includes("soup") || norm.includes("tarhana") || norm.includes("mercimek") || norm.includes("ezogelin")) {
+    return {
+      category: "Sulu Yemek & Çorba",
+      icon: "🥣",
+      name: "Çorba Çeşidi",
+      components: [
+        { item: "Meyane / Bağlayıcı Un", desc: "Çorba kıvamlaştırıcısı olarak buğday unu kullanılır." },
+        { item: "Tereyağı / Krema", desc: "Süt yağı ve laktoz barındırabilir." }
+      ]
+    };
+  }
+
+  if (norm.includes("kebap") || norm.includes("adana") || norm.includes("urfa") || norm.includes("izgara")) {
+    return {
+      category: "Kebap & Et Yemekleri",
+      icon: "🍢",
+      name: "Kebap & Izgara Tabağı",
+      components: [
+        { item: "Servis Pidesi / Lavaş", desc: "Etlerin altına serilen pide buğday unu (Gluten) içerir." },
+        { item: "Köfte Harcı", desc: "Harçta galeta unu veya ekmek içi (Gluten) kullanılır." }
+      ]
+    };
+  }
+
+  if (norm.includes("kofte") || norm.includes("meatball") || norm.includes("inegol") || norm.includes("tekirdag")) {
+    return {
+      category: "Köfte & Et Ürünleri",
+      icon: "🧆",
+      name: "Izgara Köfte Tabağı",
+      components: [
+        { item: "Köfte Bağlayıcı Harç", desc: "Kıymanın yoğrulmasında galeta unu / ekmek içi (Gluten) kullanılır." }
+      ]
+    };
+  }
+
+  if (norm.includes("biskuvi") || norm.includes("gofret") || norm.includes("kraker") || norm.includes("cikolata") || norm.includes("kurabiye")) {
+    return {
+      category: "Bisküvi & Atıştırmalık",
+      icon: "🍪",
+      name: "Bisküvi Atıştırmalık",
+      components: [
+        { item: "Buğday Unu & Nişasta", desc: "Gliadin gluten proteini barındırır." },
+        { item: "Peynir Altı Suyu (Whey) / Süt Tozu", desc: "Yüksek oranda laktoz içerir." },
+        { item: "Soya Lesitini (E322)", desc: "Emülgatör olarak soya türevi kullanılır." }
+      ]
+    };
+  }
+
+  if (norm.includes("pasta") || norm.includes("kek") || norm.includes("baklava") || norm.includes("kadayif") || norm.includes("sutlac") || norm.includes("tatli")) {
+    return {
+      category: "Tatlı & Pastane",
+      icon: "🍰",
+      name: "Pastane & Tatlı Çeşidi",
+      components: [
+        { item: "Un & Yufka", desc: "Buğday unu ve gluten proteini." },
+        { item: "Süt / Tereyağı / Krema", desc: "Laktoz ve süt proteini." }
+      ]
+    };
+  }
+
+  if (norm.includes("yulaf") || norm.includes("musli") || norm.includes("granola")) {
+    return {
+      category: "Kahvaltılık Tahıl",
+      icon: "🥣",
+      name: "Yulaf Ezmesi",
+      components: [
+        { item: "Yulaf / Tahıl", desc: "Glutensiz sertifikalı değilse çapraz bulaşma riski vardır." }
+      ]
+    };
+  }
+
   if (norm.includes("cavdar") || norm.includes("rye")) {
     return { category: "Çavdar & Tahıl Ürünleri", icon: "🌾", name: "Çavdar / Çavdar Unu Ürünü" };
   } else if (norm.includes("arpa") || norm.includes("barley") || norm.includes("malt")) {
     return { category: "Arpa & Malt Ürünleri", icon: "🍺", name: "Arpa / Arpa Maltı Ürünü" };
   } else if (norm.includes("asurelik") || norm.includes("bugday") || norm.includes("wheat") || norm.includes("bulgur") || norm.includes("irmik")) {
     return { category: "Buğday & Tahıl Ürünleri", icon: "🌾", name: norm.includes("asurelik") ? "Aşurelik Buğday (%100 Saf Gluten)" : "Buğday / Buğday Unu Ürünü" };
-  } else if (norm.includes("kebap") || norm.includes("kofte") || norm.includes("izgara") || norm.includes("doner")) {
-    return { category: "Kebap & Et Yemekleri", icon: "🍢", name: "Kebap & Izgara Tabağı" };
-  } else if (norm.includes("pizza") || norm.includes("hamur") || norm.includes("pide") || norm.includes("lahmacun")) {
-    return { category: "Pide, Pizza & Hamur İşi", icon: "🍕", name: "Pide & Hamur İşi" };
-  } else if (norm.includes("biskuvi") || norm.includes("kraker") || norm.includes("gofret") || norm.includes("kek")) {
-    return { category: "Bisküvi & Atıştırmalık", icon: "🍪", name: "Bisküvi Atıştırmalık" };
-  } else if (norm.includes("cikolata") || norm.includes("tatli") || norm.includes("sutlac")) {
-    return { category: "Tatlı & Çörek", icon: "🍨", name: "Tatlı Çeşidi" };
-  } else if (norm.includes("yulaf") || norm.includes("musli")) {
-    return { category: "Kahvaltılık Tahıl", icon: "🥣", name: "Yulaf Ezmesi" };
   } else {
     return { category: "Ambalajlı Paketli Gıda", icon: "📦", name: fileName ? fileName.split('.')[0].toUpperCase() : "Yüklenen Paket Gıda" };
   }
@@ -217,7 +318,6 @@ export const App = () => {
     setIsColdStarting(false);
     setScanResult(null);
 
-    // Cold start notification timer after 5 seconds
     const coldStartTimer = setTimeout(() => {
       setIsColdStarting(true);
     }, 5000);
@@ -250,6 +350,8 @@ export const App = () => {
             memory_verdict: data.memory_verdict,
             is_safe: data.is_safe,
             matched_allergens: data.matched_allergens,
+            cross_contamination_warnings: data.cross_contamination_warnings || [],
+            additive_warnings: data.additive_warnings || [],
             unmatched_but_suspicious: data.unmatched_but_suspicious,
             detected_raw_text: data.detected_raw_text,
             explanation: data.explanation,
@@ -276,8 +378,19 @@ export const App = () => {
 
         const triggerSummary = matched.map(m => `'${m.trigger_word}'`).join(', ');
 
+        const customProofs = (foodData.components && foodData.components.length > 0)
+          ? foodData.components.map((comp, i) => ({
+              step: `0${i + 1}`,
+              title: comp.item,
+              description: comp.desc
+            }))
+          : [
+              { step: "01", title: "Doğrudan Tetikleyici Kelime Bulundu", description: `İçerik etiketinde tespit edilen ${triggerSummary} sakıncalı hammadde listenizle doğrudan eşleşmektedir.` },
+              { step: "02", title: "Alerjen Kök Sözlük İhlali", description: "Taranan gıda içerik taksonomisi bağışıklık sisteminde reaksiyon riski oluşturmaktadır." }
+            ];
+
         const explanation = isSafe ? {
-          title: `Bu ${foodData.category} Seçili Alerjen Profiliniz İçin Güvenli mi?`,
+          title: `Bu ${foodData.name} Seçili Alerjen Profiliniz İçin Güvenli mi?`,
           summary: `Yapay zeka analizimiz, aktifleştirdiğiniz ${selectedAllergens.length} adet alerjen profilinize göre etiket üzerinde hiçbir tetikleyici kök kelimeye rastlamamıştır.`,
           proofs: [
             { step: "01", title: "Alerjen Kök Sözlük Taraması Temiz", description: "Sisteme tanımlı sakıncalı hammadde kök kelimeleri taranmış ve temiz çıkmıştır." },
@@ -286,12 +399,9 @@ export const App = () => {
           dietitian_note: "GlutenGuard Uzman Notu: Seçtiğiniz tüm alerjen profillerine göre rahatlıkla tüketebilirsiniz."
         } : {
           title: `Bu ${displayTitle} Aktif Alerjen Profiliniz İçin KESİNLİKLE RİSKLİ!`,
-          summary: `Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici kök kelimeler (${triggerSummary}) tespit edilmiştir.`,
-          proofs: [
-            { step: "01", title: "Doğrudan Tetikleyici Kelime Bulundu", description: `İçerik etiketinde tespit edilen ${triggerSummary} sakıncalı hammadde listenizle doğrudan eşleşmektedir.` },
-            { step: "02", title: "Alerjen Kök Sözlük İhlali", description: "Taranan gıda içerik taksonomisi bağışıklık sisteminde reaksiyon riski oluşturmaktadır." }
-          ],
-          dietitian_note: `GlutenGuard Uzman Uyarısı: KESİNLİKLE TÜKETMEYİNİZ! Ürün etiketinde ${triggerSummary} maddeleri tespit edilmiştir.`
+          summary: `Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici kök kelimeler (${triggerSummary}) ve gıda içerik riskleri tespit edilmiştir.`,
+          proofs: customProofs,
+          dietitian_note: `GlutenGuard Uzman Uyarısı: KESİNLİKLE TÜKETMEYİNİZ! Ürün içeriğinde ${triggerSummary} ve alerjen tetikleyici bileşenler tespit edilmiştir.`
         };
 
         finalResult = {

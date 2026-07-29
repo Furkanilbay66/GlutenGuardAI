@@ -9,6 +9,7 @@ export const ScanScreen = ({ navigation }) => {
   const { selectedAllergens } = useContext(AuthContext);
   const [selectedImage, setSelectedImage] = useState(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [loadingMsg, setLoadingMsg] = useState('');
 
   const requestPermissionAndPick = async (useCamera = false) => {
     try {
@@ -21,7 +22,7 @@ export const ScanScreen = ({ navigation }) => {
         }
         result = await ImagePicker.launchCameraAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 0.8,
+          quality: 0.7,
         });
       } else {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -31,7 +32,7 @@ export const ScanScreen = ({ navigation }) => {
         }
         result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
-          quality: 0.8,
+          quality: 0.7,
         });
       }
 
@@ -47,19 +48,46 @@ export const ScanScreen = ({ navigation }) => {
 
   const handleAnalyze = async (imageUri) => {
     setAnalyzing(true);
+    setLoadingMsg('AI sunucusuna bağlanılıyor...');
+
+    // 5 saniye sonra "uyanıyor" mesajı göster
+    const wakeupTimer = setTimeout(() => {
+      setLoadingMsg('☕ AI sunucusu uyanıyor, lütfen bekleyin (15-30 sn)...');
+    }, 5000);
+
     try {
       const result = await api.analyzeImage(imageUri, selectedAllergens);
+      clearTimeout(wakeupTimer);
       navigation.navigate('Result', { result, imageUri });
     } catch (err) {
-      Alert.alert('Tarama Hatası', err.message || 'Görsel analizi tamamlanamadı.');
+      clearTimeout(wakeupTimer);
+
+      // Backend ulaşılamaz — kullanıcıya dürüst bilgi ver, ezbere sonuç verme
+      Alert.alert(
+        '⚠️ Sunucuya Ulaşılamadı',
+        'AI sunucusu şu an yanıt vermiyor. Lütfen birkaç saniye sonra tekrar deneyin.\n\nRailway sunucusu uyku modundaysa 30 saniyeye kadar açılış süresi alabilir.',
+        [
+          {
+            text: 'Tekrar Dene',
+            onPress: () => handleAnalyze(imageUri),
+          },
+          {
+            text: 'Vazgeç',
+            style: 'cancel',
+            onPress: () => {
+              setSelectedImage(null);
+            },
+          },
+        ]
+      );
     } finally {
       setAnalyzing(false);
+      setLoadingMsg('');
     }
   };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Top Status Card */}
       <View style={styles.statusBadge}>
         <Ionicons name="sparkles" size={16} color="#2D5A43" />
         <Text style={styles.statusText}>{selectedAllergens.length} Aktif Alerjen Koruması Çalışıyor</Text>
@@ -68,7 +96,6 @@ export const ScanScreen = ({ navigation }) => {
       <Text style={styles.title}>Gıda Etiketi veya Yemek Taraması</Text>
       <Text style={styles.subtitle}>Paket üzerindeki içindekiler kısmının veya yemeğin fotoğrafını çekin.</Text>
 
-      {/* Main Image Drop Area */}
       <View style={styles.previewBox}>
         {selectedImage ? (
           <Image source={{ uri: selectedImage }} style={styles.previewImage} />
@@ -83,7 +110,8 @@ export const ScanScreen = ({ navigation }) => {
       {analyzing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#2D5A43" />
-          <Text style={styles.loadingText}>Yapay Zeka Etiketi Okuyor & NLP Kök Sözlüğü Analiz Ediyor...</Text>
+          <Text style={styles.loadingText}>{loadingMsg || 'Analiz ediliyor...'}</Text>
+          <Text style={styles.loadingSubText}>Görüntü OCR motoru ile okunuyor ve NLP alerjen taraması yapılıyor</Text>
         </View>
       ) : (
         <View style={styles.actionButtons}>
@@ -118,5 +146,6 @@ const styles = StyleSheet.create({
   secondaryBtn: { backgroundColor: '#FFFFFF', borderRadius: 16, height: 54, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, borderWidth: 1, borderColor: '#E5E2DA' },
   secondaryBtnText: { color: '#2C3E35', fontSize: 15, fontWeight: '700' },
   loadingContainer: { marginTop: 10, alignItems: 'center', padding: 20 },
-  loadingText: { fontSize: 13, fontWeight: '700', color: '#2D5A43', marginTop: 12, textAlign: 'center' }
+  loadingText: { fontSize: 14, fontWeight: '800', color: '#2D5A43', marginTop: 12, textAlign: 'center' },
+  loadingSubText: { fontSize: 11, color: '#5C6B64', marginTop: 6, textAlign: 'center', lineHeight: 16 },
 });
