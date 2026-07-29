@@ -366,107 +366,242 @@ def analyze_ingredients_text(ocr_text: str, filename: str, user_selected_allerge
         "norm_text": ocr_text_lower
     }
 
+FOOD_TAKSONOMI_DATABASE = [
+    # 1. FAST FOOD & ATIŞTIRMALIK MENÜLER
+    {
+        "id": "hamburger",
+        "keywords": ["burger", "hamburger", "cheeseburger", "fastfood", "whopper", "mc", "hamburgr", "king"],
+        "name": "Hamburger / Cheeseburger Menü",
+        "category": "Fast Food & Hamburger",
+        "icon": "🍔",
+        "components": [
+            {"item": "Hamburger Ekmeği (Bun)", "risk": "gluten", "desc": "Buğday unu (Gliadin & Glutenin) içerir. Çölyak ve gluten hastaları için sakıncalıdır."},
+            {"item": "Köfte Harcı & Soya", "risk": "gluten_soy", "desc": "Köfte yoğrulurken galeta unu/ekmek içi (Gluten) ve emülgatör olarak soya lesitini (E322) eklenebilir."},
+            {"item": "Cheddar / Dilim Peynir", "risk": "lactose", "desc": "Süt ürünü (Laktoz & Süt Proteini) barındırır."},
+            {"item": "Patates Kızartması Fritözü", "risk": "cross_contamination", "desc": "Ortak fritöz yağında çıtır kaplamalı glutenli ürünler pişirildiyse çapraz bulaşma riski vardır."}
+        ]
+    },
+    {
+        "id": "pizza",
+        "keywords": ["pizza", "pizzas", "peperoni", "margarita", "kapan"],
+        "name": "Pizza Çeşitleri",
+        "category": "Pizza & Fast Food",
+        "icon": "🍕",
+        "components": [
+            {"item": "Pizza Hamur Tabanı", "risk": "gluten", "desc": "%100 Buğday unu (Gluten) ve mayalama maddeleri içerir."},
+            {"item": "Mozzarella / Kaşar Peyniri", "risk": "lactose", "desc": "Süt proteini (Kazein) ve laktoz barındırır."},
+            {"item": "Pizza Sosu & Şarküteri Etler", "risk": "gluten_additive", "desc": "İşlenmiş sucuk/sosis gibi etlerde galeta unu ve soya proteini eklentisi bulunabilir."}
+        ]
+    },
+    {
+        "id": "tost_sandvic",
+        "keywords": ["tost", "sandvic", "toast", "sandwich", "panini", "kumru", "ayvalik"],
+        "name": "Tost & Sandviç Çeşitleri",
+        "category": "Fast Food & Atıştırmalık",
+        "icon": "🥪",
+        "components": [
+            {"item": "Tost Ekmeği / Somun", "risk": "gluten", "desc": "Maya ve buğday unu (Gluten) temel hammaddedir."},
+            {"item": "Kaşar / Peynir Dolgusu", "risk": "lactose", "desc": "Erimiş kaşar peyniri laktoz ve süt proteini kazein içerir."},
+            {"item": "Margarin & Şarküteri", "risk": "lactose_soy", "desc": "Margarin ve şarküteri etlerinde süt tozu ve soya proteini bulunabilir."}
+        ]
+    },
+    {
+        "id": "fried_chicken",
+        "keywords": ["crispy", "chicken", "nugget", "nuggets", "sinitzel", "snitzel", "kizarmis pilic", "tavuk burger"],
+        "name": "Kızarmış Çıtır Tavuk / Nugget",
+        "category": "Fast Food & Tavuk",
+        "icon": "🍗",
+        "components": [
+            {"item": "Çıtır Kaplama Panesi", "risk": "gluten", "desc": "Galeta unu, mısır/buğday nişastası ve pane harcı (Gluten) ile kaplanır."},
+            {"item": "Tavuk Marinasyonu", "risk": "milk_protein", "desc": "Marinasyonda süt tozu, yoğurt veya peynir altı suyu kullanılabilir."}
+        ]
+    },
+    {
+        "id": "hotdog_sosisli",
+        "keywords": ["sosisli", "hotdog", "hot dog", "sosis ekmek", "gorali"],
+        "name": "Sosisli Sandviç / Hot Dog",
+        "category": "Fast Food & Atıştırmalık",
+        "icon": "🌭",
+        "components": [
+            {"item": "Sosisli Ekmeği", "risk": "gluten", "desc": "Buğday unu ve tatlandırıcı malt eklentisi (Gluten) içerir."},
+            {"item": "Sosis Et İçeriği", "risk": "gluten_soy", "desc": "Sosis kıymasında kıvam için nişasta, soya proteini ve galeta unu yer alır."},
+            {"item": "Mayonez & Ketçap Sos", "risk": "egg", "desc": "Mayonez sos yumurta sarısı albümini içerir."}
+        ]
+    },
+    {
+        "id": "taco_burrito",
+        "keywords": ["taco", "burrito", "wrap", "quesadilla", "nachos", "fajita"],
+        "name": "Meksika Taco / Burrito / Wrap",
+        "category": "Fast Food & Meksika Mutfagi",
+        "icon": "🌮",
+        "components": [
+            {"item": "Lavaş / Tortilla Ekmeği", "risk": "gluten", "desc": "Buğday unu tortillasından yapılan dürümler gluten içerir."},
+            {"item": "Krema & Ekşi Peynir", "risk": "lactose", "desc": "Sour cream ve peynir sosları laktoz riski taşır."}
+        ]
+    },
+
+    # 2. HAMUR İŞLERİ & PASTANELER
+    {
+        "id": "lahmacun",
+        "keywords": ["lahmacun", "findik lahmacun"],
+        "name": "Çıtır Lahmacun",
+        "category": "Hamur İşi & Pide",
+        "icon": "🍕",
+        "components": [
+            {"item": "İnce Lahmacun Hamuru", "risk": "gluten", "desc": "Buğday unu (Gliadin/Glutenin) ana hammaddedir."},
+            {"item": "Kıymalı Harç", "risk": "gluten", "desc": "Kıymada bayat ekmek veya galeta unu eklentisi bulunabilir."}
+        ]
+    },
+    {
+        "id": "pide",
+        "keywords": ["pide", "kasarli pide", "kiymali pide", "kusbasi pide", "bafra pidesi"],
+        "name": "Geleneksel Pide Çeşitleri",
+        "category": "Hamur İşi & Pide",
+        "icon": "🍞",
+        "components": [
+            {"item": "Mayalı Pide Hamuru", "risk": "gluten", "desc": "Yüksek glutenli ekmeklik buğday unundan üretilir."},
+            {"item": "Kaşar / İçi", "risk": "lactose", "desc": "Erimiş kaşar peyniri süt şekeri ve laktoz barındırır."}
+        ]
+    },
+    {
+        "id": "borek_poaca",
+        "keywords": ["borek", "pogaca", "acma", "simit", "boyoz", "gozleme", "katmer", "manti", "su boregi"],
+        "name": "Börek, Poğaça, Simit & Mantı",
+        "category": "Hamur İşi & Pastane",
+        "icon": "🥐",
+        "components": [
+            {"item": "Yufka & Hamur", "risk": "gluten", "desc": "Kat kat açılan yufkalar %100 buğday unu (Gluten) barındırır."},
+            {"item": "Peynir / Çökelek İçi", "risk": "lactose", "desc": "İç harcında kullanılan peynirler laktoz ve süt proteini kazein içerir."},
+            {"item": "Susam & Tahin", "risk": "sesame", "desc": "Simit ve açmalardaki susam güçlü bir alerjen grubudur."}
+        ]
+    },
+    {
+        "id": "tatli_pastane",
+        "keywords": ["baklava", "kadayif", "sekerpare", "pasta", "kek", "tart", "waffle", "pankek", "donut", "kurabiye"],
+        "name": "Pastane Tatlıları & Baklava",
+        "category": "Tatlı & Pastane",
+        "icon": "🍰",
+        "components": [
+            {"item": "Un & Baklava Yufkası", "risk": "gluten", "desc": "Sert glutenli unlardan elde edilen baklavalık yufkalar içerir."},
+            {"item": "Tereyağı & Şerbet & Süt", "risk": "lactose", "desc": "Süt yağı, krema ve laktoz içerir."},
+            {"item": "Yumurta & Ceviz/Fındık", "risk": "egg_nuts", "desc": "Yumurta sarısı ve sert kabuklu meyve parçacıkları (Alerjen)."}
+        ]
+    },
+
+    # 3. DÖNER, KEBAP & ET ÜRÜNLERİ
+    {
+        "id": "doner_iskender",
+        "keywords": ["doner", "iskender", "yaprak doner", "tavuk doner", "et doner"],
+        "name": "Döner / İskender Dürüm",
+        "category": "Döner & Kebap Çeşitleri",
+        "icon": "🥙",
+        "components": [
+            {"item": "Lavaş & Tırnak Pide", "risk": "gluten", "desc": "Dürüm lavaşı ve pide buğday unu (Gluten) içerir."},
+            {"item": "İskender Sosu & Tereyağı", "risk": "lactose", "desc": "Kızgın tereyağı laktoz ve sos meyanesinde buğday unu içerebilir."},
+            {"item": "Döner Marinesi & Harcı", "risk": "milk_gluten", "desc": "Döner etinin yoğurt/süt ile marinesi (Laktoz) veya bağlayıcı un içerebilir."}
+        ]
+    },
+    {
+        "id": "kebap_izgara",
+        "keywords": ["kebap", "adana", "urfa", "beyti", "ali nazik", "cag kebap"],
+        "name": "Geleneksel Kebap & Izgara Tabağı",
+        "category": "Kebap & Et Yemekleri",
+        "icon": "🍢",
+        "components": [
+            {"item": "Taban Lavaş / Pide", "risk": "gluten", "desc": "Kebap altında sunulan tırnak pide %100 buğday unu (Gluten) içerir."},
+            {"item": "Kebap Harcı & Baharatlar", "risk": "gluten_additive", "desc": "Bazı kıyma harçlarında bağlayıcı ekmek içi ve baharat çeşnileri bulunabilir."},
+            {"item": "Süzme Yoğurt / Tereyağ", "risk": "lactose", "desc": "Ali Nazik ve Beyti kebaplarında süzme yoğurt ve tereyağı laktoz içerir."}
+        ]
+    },
+    {
+        "id": "kofte_cesitleri",
+        "keywords": ["kofte", "meatball", "inegol", "tekirdag", "akcaabat", "kadinbudu"],
+        "name": "Izgara / Ev Köftesi Tabağı",
+        "category": "Köfte & Et Ürünleri",
+        "icon": "🧆",
+        "components": [
+            {"item": "Köfte Bağlayıcı Harç", "risk": "gluten", "desc": "Kıymaya elastikiyet ve hacim kazandırmak için galeta unu / bayat ekmek içi (Gluten) eklenir."},
+            {"item": "Yumurta & Baharat", "risk": "egg", "desc": "Kadınbudu ve ev köftelerinde harcı bağlamak için yumurta kullanılır."}
+        ]
+    },
+    {
+        "id": "sarkuteri_et",
+        "keywords": ["sucuk", "pastirma", "sosis", "salam", "kavurma", "kokorec", "tantuni"],
+        "name": "İşlenmiş Et & Şarküteri Ürünleri",
+        "category": "Şarküteri & İşlenmiş Et",
+        "icon": "🥓",
+        "components": [
+            {"item": "İşlenmiş Et Bağlayıcıları", "risk": "gluten_soy", "desc": "Sosis ve salamda soya proteini (E322) ve nişasta (Gluten riski) kullanılır."},
+            {"item": "Süt Proteini / Kazein", "risk": "milk_protein", "desc": "Şarküteri emülsiyonlarında sodyum kazeinat ve süt tozu koruyucu olarak eklenir."}
+        ]
+    },
+
+    # 4. ÇORBALAR & SULU YEMEKLER
+    {
+        "id": "corbalar",
+        "keywords": ["corba", "soup", "tarhana", "mercimek", "ezogelin", "beyran", "iskembe", "paca", "kelle paca", "yayla"],
+        "name": "Geleneksel Çorba Çeşitleri",
+        "category": "Sulu Yemek & Çorba",
+        "icon": "🥣",
+        "components": [
+            {"item": "Meyane / Bağlayıcı Un", "risk": "gluten", "desc": "Çorbanın kıvamını bağlamak için kavrulmuş buğday unu (Gluten) meyane olarak kullanılır."},
+            {"item": "Tereyağı & Yoğurt Terbiyesi", "risk": "lactose", "desc": "Yayla ve terbiye çorbalarda süzme yoğurt, süt ve kızgın tereyağı bulunur."}
+        ]
+    },
+
+    # 5. SÜT, PEYNİR & SÜTLÜ TATLILAR
+    {
+        "id": "sutlu_tatlilar",
+        "keywords": ["sutlac", "muhallebi", "kazandibi", "keskul", "trilece", "krem karamel", "dondurma", "supangle", "puding"],
+        "name": "Geleneksel Sütlü Tatlılar & Dondurma",
+        "category": "Sütlü Tatlı & Dondurma",
+        "icon": "🍨",
+        "components": [
+            {"item": "Taze Süt & Krema", "risk": "lactose", "desc": "Tüm sütlü tatlılar %100 yüksek laktoz ve süt proteini kazein içerir."},
+            {"item": "Nişasta & Buğday Unu", "risk": "gluten", "desc": "Muhallebi ve pudinglerde kıvam için buğday nişastası kullanılabilir."}
+        ]
+    },
+
+    # 6. DENİZ ÜRÜNLERİ
+    {
+        "id": "seafood_dishes",
+        "keywords": ["balik", "fish", "hamsi", "kalamar", "midye", "karides", "istakoz", "yengec", "ton baligi", "somon"],
+        "name": "Deniz Ürünleri & Balık Yemekleri",
+        "category": "Deniz Ürünleri & Balık",
+        "icon": "🐟",
+        "components": [
+            {"item": "Balık / Deniz Canlısı", "risk": "seafood", "desc": "Deniz ürünleri alerjisi olan bireylerde doğrudan ana reaksiyon kaynağıdır."},
+            {"item": "Mısır / Buğday Unu Tava Panesi", "risk": "gluten", "desc": "Hamsi ve kalamar kızartılırken un (Gluten) ile kaplanır."},
+            {"item": "Karides Güveç Tereyağı", "risk": "lactose", "desc": "Güveç pişiriminde kaşar peyniri ve tereyağı (Laktoz) kullanılır."}
+        ]
+    },
+
+    # 7. AMBALAJLI BİSKÜVİ, ÇİKOLATA & CİPSLER
+    {
+        "id": "ambalajli_atistirmalik",
+        "keywords": ["biskuvi", "kraker", "gofret", "cikolata", "cips", "doritos", "ruffles", "lays", "oreo"],
+        "name": "Ambalajlı Atıştırmalık & Cips",
+        "category": "Atıştırmalık & Bisküvi",
+        "icon": "🍪",
+        "components": [
+            {"item": "Buğday Unu & Gliadin", "risk": "gluten", "desc": "Unlu atıştırmalıkların tümü gluten barındırır."},
+            {"item": "Peynir Altı Suyu Tozu (Whey)", "risk": "lactose", "desc": "Aroma artırıcı olarak laktoz ve whey eklenir."},
+            {"item": "Soya Lesitini (E322)", "risk": "soy", "desc": "Emülgatör olarak soya lesitini kullanılır."}
+        ]
+    }
+]
+
 def infer_food_name_and_category(norm_text: str) -> dict:
-    if any(k in norm_text for k in ["burger", "hamburger", "cheeseburger", "fastfood", "whopper", "mc", "hamburgr"]):
-        return {
-            "name": "Hamburger / Cheeseburger Menü",
-            "category": "Fast Food & Hamburger",
-            "icon": "🍔",
-            "components": [
-                {"item": "Hamburger Ekmeği (Bun)", "risk": "gluten", "desc": "Buğday unu (Gliadin & Glutenin) içerir. Çölyak ve gluten hastaları için sakıncalıdır."},
-                {"item": "Köfte Harcı & Soya", "risk": "gluten_soy", "desc": "Köfte yoğrulurken galeta unu/ekmek içi (Gluten) ve soya lesitini (E322) eklenebilir."},
-                {"item": "Cheddar / Dilim Peynir", "risk": "lactose", "desc": "Süt ürünü (Laktoz & Süt Proteini) barındırır."},
-                {"item": "Patates Kızartması Fritözü", "risk": "cross_contamination", "desc": "Ortak fritöz yağında çıtır kaplamalı glutenli ürünler pişirildiyse çapraz bulaşma riski vardır."}
-            ]
-        }
-    elif any(k in norm_text for k in ["doner", "iskender", "durum", "yaprak doner"]):
-        return {
-            "name": "Döner / İskender Dürüm",
-            "category": "Döner & Kebap Çeşitleri",
-            "icon": "🥙",
-            "components": [
-                {"item": "Lavaş & Tırnak Pide", "risk": "gluten", "desc": "Yüksek oranda buğday unu (Gluten) içerir."},
-                {"item": "Sos & Kızgın Tereyağı", "risk": "lactose", "desc": "Süt yağı/laktoz ve sos meyanesinde un bulunabilir."},
-                {"item": "Döner Harcı", "risk": "gluten", "desc": "Kıymada bağlayıcı galeta unu ve baharat çeşnileri kullanılabilir."}
-            ]
-        }
-    elif any(k in norm_text for k in ["pizza", "pide", "lahmacun"]):
-        return {
-            "name": "Pizza / Lahmacun / Pide",
-            "category": "Pizza & Pide",
-            "icon": "🍕",
-            "components": [
-                {"item": "Hamur Tabanı", "risk": "gluten", "desc": "%100 Buğday unu (Gluten) ve mayalama maddeleri içerir."},
-                {"item": "Mozzarella / Kaşar Peyniri", "risk": "lactose", "desc": "Süt proteini (Kazein) ve laktoz barındırır."}
-            ]
-        }
-    elif any(k in norm_text for k in ["corba", "soup", "tarhana", "mercimek", "ezogelin"]):
-        return {
-            "name": "Çorba Çeşidi",
-            "category": "Sulu Yemek & Çorba",
-            "icon": "🥣",
-            "components": [
-                {"item": "Meyane / Bağlayıcı Un", "risk": "gluten", "desc": "Çorba kıvamlaştırıcısı olarak buğday unu kullanılır."},
-                {"item": "Tereyağı / Krema", "risk": "lactose", "desc": "Süt yağı ve laktoz barındırabilir."}
-            ]
-        }
-    elif any(k in norm_text for k in ["kebap", "adana", "urfa", "izgara"]):
-        return {
-            "name": "Kebap & Izgara Tabağı",
-            "category": "Kebap & Et Yemekleri",
-            "icon": "🍢",
-            "components": [
-                {"item": "Servis Pidesi / Lavaş", "risk": "gluten", "desc": "Etlerin altına serilen pide buğday unu (Gluten) içerir."},
-                {"item": "Köfte Harcı", "risk": "gluten", "desc": "Harçta galeta unu veya ekmek içi (Gluten) kullanılır."}
-            ]
-        }
-    elif any(k in norm_text for k in ["kofte", "meatball", "inegol", "tekirdag"]):
-        return {
-            "name": "Izgara Köfte Tabağı",
-            "category": "Köfte & Et Ürünleri",
-            "icon": "🧆",
-            "components": [
-                {"item": "Köfte Bağlayıcı Harç", "risk": "gluten", "desc": "Kıymanın yoğrulmasında galeta unu / ekmek içi (Gluten) kullanılır."}
-            ]
-        }
-    elif any(k in norm_text for k in ["biskuvi", "gofret", "kraker", "cikolata", "kurabiye"]):
-        return {
-            "name": "Bisküvi / Atıştırmalık Ürün",
-            "category": "Bisküvi & Atıştırmalık",
-            "icon": "🍪",
-            "components": [
-                {"item": "Buğday Unu & Nişasta", "risk": "gluten", "desc": "Gliadin gluten proteini barındırır."},
-                {"item": "Peynir Altı Suyu (Whey) / Süt Tozu", "risk": "lactose", "desc": "Yüksek oranda laktoz içerir."},
-                {"item": "Soya Lesitini (E322)", "risk": "soy", "desc": "Emülgatör olarak soya türevi kullanılır."}
-            ]
-        }
-    elif any(k in norm_text for k in ["pasta", "kek", "baklava", "kadayif", "sutlac", "tatli"]):
-        return {
-            "name": "Pastane & Tatlı Çeşidi",
-            "category": "Tatlı & Pastane",
-            "icon": "🍰",
-            "components": [
-                {"item": "Un & Yufka", "risk": "gluten", "desc": "Buğday unu ve gluten proteini."},
-                {"item": "Süt / Tereyağı / Krema", "risk": "lactose", "desc": "Laktoz ve süt proteini."}
-            ]
-        }
-    elif any(k in norm_text for k in ["yulaf", "musli", "granola"]):
-        return {
-            "name": "Yulaf Ezmesi / Granola",
-            "category": "Kahvaltılık Tahıl",
-            "icon": "🥣",
-            "components": [
-                {"item": "Yulaf / Tahıl", "risk": "gluten", "desc": "Glutensiz sertifikalı değilse çapraz bulaşma riski vardır."}
-            ]
-        }
-    elif any(k in norm_text for k in ["cavdar", "rye"]):
-        return {"name": "Çavdar / Çavdar Unu Ürünü", "category": "Çavdar & Tahıl Ürünleri", "icon": "🌾"}
-    elif any(k in norm_text for k in ["arpa", "barley", "malt"]):
-        return {"name": "Arpa / Arpa Maltı Ürünü", "category": "Arpa & Malt Ürünleri", "icon": "🍺"}
-    elif any(k in norm_text for k in ["asurelik", "bugday", "bulgur", "irmik"]):
-        return {"name": "Buğday / Aşurelik Buğday", "category": "Buğday & Tahıl Ürünleri", "icon": "🌾"}
-    else:
-        return {"name": "Ambalajlı Paketli Gıda", "category": "Ambalajlı Paketli Gıda", "icon": "📦"}
+    for entry in FOOD_TAKSONOMI_DATABASE:
+        if any(k in norm_text for k in entry["keywords"]):
+            return {
+                "name": entry["name"],
+                "category": entry["category"],
+                "icon": entry["icon"],
+                "components": entry["components"]
+            }
+
+    return {"name": "Ambalajlı Paketli Gıda", "category": "Ambalajlı Paketli Gıda", "icon": "📦"}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. Seed Initial Database Products & Additives
