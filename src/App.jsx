@@ -700,11 +700,11 @@ export const App = () => {
         const explanation = isSafe ? {
           title: `Bu ${foodData.name} Seçili Alerjen Profiliniz İçin Güvenli mi?`,
           summary: `Yapay zeka analizimiz, aktifleştirdiğiniz ${selectedAllergens.length} adet alerjen profilinize göre etiket üzerinde hiçbir tetikleyici kök kelimeye rastlamamıştır.`,
-          proofs: [
+          proofs: customProofs.length > 0 ? customProofs : [
             { step: "01", title: "Alerjen Kök Sözlük Taraması Temiz", description: "Sisteme tanımlı sakıncalı hammadde kök kelimeleri taranmış ve temiz çıkmıştır." },
             { step: "02", title: "Çoklu Profil Uyumluluğu", description: "Seçtiğiniz tüm hassasiyet kriterleri karşılanmıştır." }
           ],
-          dietitian_note: "GlutenGuard Uzman Notu: Seçtiğiniz tüm alerjen profillerine göre rahatlıkla tüketebilirsiniz."
+          dietitian_note: `GlutenGuard Uzman Notu: ${displayTitle} seçtiğiniz ${selectedAllergens.length} adet aktif alerjen profilinize göre güvenlidir.`
         } : {
           title: `Bu ${displayTitle} Aktif Alerjen Profiliniz İçin KESİNLİKLE RİSKLİ!`,
           summary: `Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici kök kelimeler (${triggerSummary}) ve gıda içerik riskleri tespit edilmiştir.`,
