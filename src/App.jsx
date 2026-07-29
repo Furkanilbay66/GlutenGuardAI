@@ -338,6 +338,20 @@ const FOOD_TAKSONOMI_DATABASE = [
     ]
   },
 
+  // 0. FIRIN & EKMEK MAMULLERİ (TOP PRIORITY)
+  {
+    id: "ekmek_firin",
+    keywords: ["ekmek", "bread", "somun", "francala", "baston", "tost ekmegi", "cavdar ekmegi", "tam bugday", "bazlama", "lavas", "tandir", "pide ekmegi"],
+    name: "Fırın Ekmeği & Unlu Mamuller",
+    category: "Fırın & Ekmek Ürünleri",
+    icon: "🍞",
+    components: [
+      { item: "Buğday Unu & Gliadin (Ekmek Hamuru)", desc: "%100 Buğday unu (Gliadin & Glutenin) ana bileşendir. Çölyak ve gluten hastaları için KESİNLİKLE YASAKTIR!" },
+      { item: "Maya & Ekşi Maya Kültürü", desc: "Maya fermantasyon ortamında malt ve buğday nişastası kalıntıları bulunabilir." },
+      { item: "Süt Tozu & Peynir Altı Suyu", desc: "Ekmek kabuğunun kızarması için hamura süt tozu veya tereyağı eklenebilir." },
+      { item: "Fırın Tezgahı Çapraz Bulaşma Uyarısı", desc: "Fırınlarda un tozu havada uçuştuğu için %100 gluten bulaşma riski mevcuttur." }
+    ]
+  },
   // 6. DENİZ ÜRÜNLERİ & BALIKLAR
   {
     id: "seafood_dishes",
@@ -486,11 +500,25 @@ const LOCAL_FILLER_WORDS = new Set([
   "gorsel", "resim", "yapilir", "yapilisi", "kadar", "dakika", "kolay", "nefis", "yemek", "tarifleri"
 ]);
 
+const isHexOrNumericStringLocal = (s) => {
+  if (!s) return false;
+  const sClean = s.replace(/[-_.]+/g, '');
+  if (/^[0-9a-fA-F\-]{8,}$/.test(s) || /^[0-9xX\-a-fA-F]{10,}$/.test(s)) return true;
+  if (sClean.length > 6 && (sClean.replace(/[^0-9]/g, '').length / sClean.length) > 0.35) return true;
+  return false;
+};
+
 const cleanFilenameToTitleLocal = (filename) => {
-  if (!filename) return "Taranan Lezzet Ürünü";
+  if (!filename) return "Taranan Gıda Ürünü";
   const raw = filename.split('.')[0];
+
+  if (isHexOrNumericStringLocal(raw)) {
+    return "Fırın & Gıda Ürünü Görseli";
+  }
+
   const clean = raw.replace(/[-_.]+/g, ' ').toLowerCase();
 
+  if (clean.includes("ekmek") || clean.includes("bread") || clean.includes("somun") || clean.includes("francala") || clean.includes("bazlama")) return "Fırın Ekmeği & Unlu Mamuller";
   if (clean.includes("pirzola")) return "Izgara Pirzola Et Tabağı";
   if (clean.includes("biftek") || clean.includes("antrikot") || clean.includes("bonfile") || clean.includes("steak")) return "Izgara Biftek / Antrikot Tabağı";
   if (clean.includes("tavuk") || clean.includes("chicken") || clean.includes("nugget") || clean.includes("sinitzel") || clean.includes("kanat")) return "Kızarmış / Izgara Tavuk Menü";
@@ -512,7 +540,7 @@ const cleanFilenameToTitleLocal = (filename) => {
     const formatted = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     return `${formatted} Yemek Ürünü`;
   }
-  return "Taranan Yemek Ürünü";
+  return "Taranan Gıda Görseli";
 };
 
 const inferDynamicFoodData = (text, fileName = "") => {

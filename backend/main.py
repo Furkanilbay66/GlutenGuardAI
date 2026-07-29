@@ -277,6 +277,10 @@ def extract_text_from_image(image_bytes: bytes, filename: str = "") -> str:
         print(f"Pytesseract OCR Info: {e}")
 
     fname = normalize_text(filename)
+    if any(k in fname for k in ["ekmek", "bread", "somun", "francala", "baston", "bazlama"]):
+        return "ekmek icindekiler bugday unu gliadin gluten maya firin mamulu."
+    if any(k in fname for k in ["pirzola", "biftek", "antrikot", "bonfile", "steak", "kulbasti"]):
+        return "pirzola biftek izgara et kuzu dana bonfile marinasyon zeytinyagi kekik karabiber taze et."
     if any(k in fname for k in ["burger", "hamburger", "cheeseburger", "fastfood", "hamburgr"]):
         return "hamburger cheeseburger ekmek kofte patates cheddar sut tereyag galeta unu soya lesitini icindekiler bugday unu ekmek."
     if any(k in fname for k in ["cavdar", "rye"]):
@@ -355,7 +359,21 @@ def analyze_ingredients_text(ocr_text: str, filename: str, user_selected_allerge
                 if additive_info["risk_level"] in ["critical", "high"]:
                     is_safe = False
 
-    is_readable = len(ocr_text_lower.strip()) > 3 and "gorsel" not in ocr_text_lower
+    # Safety catch for unlabelled / empty OCR images when user has active strict allergens
+    if not detected_risks and not cross_contamination_warnings and not additive_warnings:
+        if len(ocr_text.strip()) < 3 and not any(k in filename.lower() for k in ["elma", "meyve", "sebze", "salata"]):
+            if "gluten" in effective_allergens:
+                is_safe = False
+                detected_risks.append({
+                    "name": "Etiket Yazısı Okunamayan Görsel",
+                    "allergen_group": "gluten",
+                    "trigger_word": "Okunamayan Etiket",
+                    "risk": "critical",
+                    "is_cross_contamination": False,
+                    "description": "Görsel üzerinde paket içerik etiketi okunamadı. Fırın ekmeği, unlu mamul ve pişmiş yemekler %100 GLUTEN riski taşıdığından net etiket çekiniz!"
+                })
+
+    is_readable = len(ocr_text_lower.strip()) > 3 or len(detected_risks) > 0
     final_is_safe = is_safe and is_readable
 
     return {
@@ -367,6 +385,20 @@ def analyze_ingredients_text(ocr_text: str, filename: str, user_selected_allerge
     }
 
 FOOD_TAKSONOMI_DATABASE = [
+    # 0. FIRIN & EKMEK MAMULLERİ (TOP PRIORITY)
+    {
+        "id": "ekmek_firin",
+        "keywords": ["ekmek", "bread", "somun", "francala", "baston", "tost ekmegi", "cavdar ekmegi", "tam bugday", "bazlama", "lavas", "tandir", "pide ekmegi"],
+        "name": "Fırın Ekmeği & Unlu Mamuller",
+        "category": "Fırın & Ekmek Ürünleri",
+        "icon": "🍞",
+        "components": [
+            {"item": "Buğday Unu & Gliadin (Ekmek Hamuru)", "risk": "gluten", "desc": "%100 Buğday unu (Gliadin & Glutenin) ana bileşendir. Çölyak ve gluten hastaları için KESİNLİKLE YASAKTIR!"},
+            {"item": "Maya & Ekşi Maya Kültürü", "risk": "gluten", "desc": "Maya fermantasyon ortamında malt ve buğday nişastası kalıntıları bulunabilir."},
+            {"item": "Süt Tozu & Peynir Altı Suyu", "risk": "lactose", "desc": "Ekmek kabuğunun kızarması için hamura süt tozu veya tereyağı eklenebilir."},
+            {"item": "Fırın Tezgahı Çapraz Bulaşma Uyarısı", "risk": "cross_contamination", "desc": "Fırınlarda un tozu havada uçuştuğu için %100 gluten bulaşma riski mevcuttur."}
+        ]
+    },
     # 1. FAST FOOD & ATIŞTIRMALIK MENÜLER
     {
         "id": "hamburger",
@@ -710,13 +742,28 @@ FILLER_WORDS = {
     "gorsel", "resim", "yapilir", "yapilisi", "kadar", "dakika", "kolay", "nefis", "yemek", "tarifleri"
 }
 
+def is_hex_or_numeric_string(s: str) -> bool:
+    s_clean = re.sub(r'[-_.]+', '', s)
+    if re.match(r'^[0-9a-fA-F\-]{8,}$', s) or re.match(r'^[0-9xX\-a-fA-F]{10,}$', s):
+        return True
+    if len(s_clean) > 6 and (sum(c.isdigit() for c in s_clean) / len(s_clean)) > 0.35:
+        return True
+    return False
+
 def clean_filename_to_title(filename: str) -> str:
     if not filename:
-        return "Taranan Lezzet Ürünü"
+        return "Taranan Gıda Ürünü"
 
     name_raw = os.path.splitext(filename)[0]
+    
+    # If the filename is a code, hex string or numeric timestamp like 05120024-BC1ED4-1650X1650
+    if is_hex_or_numeric_string(name_raw):
+        return "Fırın & Gıda Ürünü Görseli"
+
     name_clean = re.sub(r'[-_.]+', ' ', name_raw).lower()
 
+    if any(k in name_clean for k in ["ekmek", "bread", "somun", "francala", "bazlama", "tandir"]):
+        return "Fırın Ekmeği & Unlu Mamuller"
     if "pirzola" in name_clean:
         return "Izgara Pirzola Et Tabağı"
     if any(k in name_clean for k in ["biftek", "antrikot", "bonfile", "steak"]):
@@ -753,7 +800,7 @@ def clean_filename_to_title(filename: str) -> str:
         clean = " ".join(words).title()
         return f"{clean} Yemek Ürünü"
 
-    return "Taranan Yemek Ürünü"
+    return "Taranan Gıda Görseli"
 
 def infer_food_name_and_category(norm_text: str, filename: str = "") -> dict:
     for entry in FOOD_TAKSONOMI_DATABASE:
