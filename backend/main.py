@@ -576,7 +576,20 @@ FOOD_TAKSONOMI_DATABASE = [
         ]
     },
 
-    # 7. AMBALAJLI BİSKÜVİ, ÇİKOLATA, CİPS & İÇECEKLER
+    # 4. TAZET ET & KEBAPLAR
+    {
+        "id": "pirzola_biftek",
+        "keywords": ["pirzola", "biftek", "antrikot", "bonfile", "steak", "ribeye", "t bone", "kuzu pirzola", "dana pirzola", "kulbasti"],
+        "name": "Izgara Pirzola & Biftek Tabağı",
+        "category": "Taze Et & Izgara Yemekleri",
+        "icon": "🥩",
+        "components": [
+            {"item": "Saf Pirzola / Biftek Eti", "risk": "safe_meat", "desc": "%100 Doğal taze et ham haliyle Gliadin (Gluten) ve Laktoz içermez, tam güvenlidir."},
+            {"item": "Marinasyon & Soya Sosu Riski", "risk": "gluten_soy", "desc": "Et marine edilirken soya sosu (Gluten/Soya) veya hazır bulyon çeşnisi kullanıldıysa dikkat edilmelidir."},
+            {"item": "Kızgın Tereyağı Cızbız", "risk": "lactose", "desc": "Pişirim aşamasında dökülen kızgın tereyağı laktoz ve süt proteini kazein barındırır."},
+            {"item": "Izgara Pide Çapraz Bulaşması", "risk": "cross_contamination", "desc": "Ortak ızgarada pide/lavaş ısıtıldıysa gluten bulaşma riski vardır."}
+        ]
+    },
     {
         "id": "cips_cerez",
         "keywords": ["cips", "chips", "doritos", "ruffles", "lays", "cheetos", "pringles", "cerez", "kuruyemis"],
@@ -638,15 +651,46 @@ FOOD_TAKSONOMI_DATABASE = [
     }
 ]
 
+FILLER_WORDS = {
+    "pisirme", "yontem", "ve", "dereceleri", "nasil", "pisirilir", "hakkinda", "tarifi",
+    "resmi", "gorseli", "indir", "photo", "image", "scan", "pic", "dsc", "img", "frame",
+    "gorsel", "resim", "yapilir", "yapilisi", "kadar", "dakika", "kolay", "nefis", "yemek", "tarifleri"
+}
+
 def clean_filename_to_title(filename: str) -> str:
     if not filename:
-        return "Taranan Gıda Ürünü"
-    name = os.path.splitext(filename)[0]
-    name = re.sub(r'[-_.]+', ' ', name)
-    name = re.sub(r'\b(photo|image|scan|pic|dsc|img|frame|gorsel|resim)\b', '', name, flags=re.IGNORECASE).strip()
-    if len(name) > 2:
-        return name.title() + " Ürünü"
-    return "Taranan Ambalajlı Ürün"
+        return "Taranan Lezzet Ürünü"
+
+    name_raw = os.path.splitext(filename)[0]
+    name_clean = re.sub(r'[-_.]+', ' ', name_raw).lower()
+
+    if "pirzola" in name_clean:
+        return "Izgara Pirzola Et Tabağı"
+    if any(k in name_clean for k in ["biftek", "antrikot", "bonfile", "steak"]):
+        return "Izgara Biftek / Antrikot Tabağı"
+    if "kofte" in name_clean:
+        return "Izgara Köfte Tabağı"
+    if any(k in name_clean for k in ["burger", "hamburger"]):
+        return "Hamburger / Cheeseburger Menü"
+    if any(k in name_clean for k in ["doner", "iskender"]):
+        return "Döner / İskender Dürüm"
+    if "pizza" in name_clean:
+        return "Pizza Çeşitleri"
+    if "lahmacun" in name_clean:
+        return "Çıtır Lahmacun"
+    if "pide" in name_clean:
+        return "Geleneksel Pide Çeşitleri"
+    if any(k in name_clean for k in ["borek", "pogaca"]):
+        return "Pastane Börek & Poğaça"
+    if "corba" in name_clean:
+        return "Çorba Çeşidi"
+
+    words = [w for w in name_clean.split() if w not in FILLER_WORDS and len(w) > 1]
+    if words:
+        clean = " ".join(words).title()
+        return f"{clean} Yemek Ürünü"
+
+    return "Taranan Yemek Ürünü"
 
 def infer_food_name_and_category(norm_text: str, filename: str = "") -> dict:
     for entry in FOOD_TAKSONOMI_DATABASE:
@@ -661,13 +705,13 @@ def infer_food_name_and_category(norm_text: str, filename: str = "") -> dict:
     custom_title = clean_filename_to_title(filename)
     return {
         "name": custom_title,
-        "category": "Ambalajlı İçerik & Atıştırmalık",
-        "icon": "🍱",
+        "category": "Taze Yemek & Yöresel Mutfak",
+        "icon": "🍲",
         "components": [
-            {"item": "Buğday Unu, Nişasta & Malt Ekstraktı", "risk": "gluten", "desc": "Gıda bağlayıcısı ve hacim artırıcı olarak buğday unu, modifiye nişasta (Gluten) kullanılabilir."},
-            {"item": "Süt Tozu & Peynir Altı Suyu (Whey)", "risk": "lactose", "desc": "Aroma lezzeti için peynir altı suyu tozu ve süt proteini (Laktoz & Kazein) içerebilir."},
-            {"item": "Soya Lesitini (E322) & Katkılar", "risk": "soy", "desc": "Emülgatör olarak soya türevleri ve kıvam artırıcı E-kodları barındırabilir."},
-            {"item": "Tesis Çapraz Bulaşma Uyarısı", "risk": "cross_contamination", "desc": "Ortak imalat bandında fındık, fıstık, susam ve yumurta işlenme riski mevcuttur."}
+            {"item": "Taze Et / Hammadde Doğallığı", "risk": "safe_meat", "desc": "Doğal işlenmemiş taze ürünler katkı ve gluten barındırmaz."},
+            {"item": "Sote & Sos Marinasyonu", "risk": "gluten_soy", "desc": "Yemek marinasyonunda soya sosu veya unlu sos bağlayıcılar eklenebilir."},
+            {"item": "Kızartma & Tereyağı Yağı", "risk": "lactose", "desc": "Lezzetlendirmede kullanılan tereyağı laktoz ve süt proteini kazein içerir."},
+            {"item": "Servis Pidesi & Çapraz Bulaşma", "risk": "cross_contamination", "desc": "Restoran mutfağında unlu mamullerle ortak alanda hazırlanma riski mevcuttur."}
         ]
     }
 
@@ -980,38 +1024,36 @@ async def analyze_base64(
     additive_warnings = analysis["additive_warnings"]
     is_safe = analysis["is_safe"]
 
+    custom_proofs = []
+    if "components" in food_meta and food_meta["components"]:
+        for idx, comp in enumerate(food_meta["components"], 1):
+            custom_proofs.append({
+                "step": f"0{idx}",
+                "title": comp["item"],
+                "description": comp["desc"]
+            })
+
     if is_safe:
         explanation = {
             "title": f"Bu {food_meta['name']} Seçili Alerjen Profiliniz İçin Güvenli mi?",
-            "summary": "Yapay zeka analizimiz, aktifleştirdiğiniz alerjen profilinize göre etiket üzerinde hiçbir tetikleyici hammadde köküne rastlamamıştır.",
-            "proofs": [
+            "summary": f"Yapay zeka analizimiz, aktifleştirdiğiniz alerjen profilinize göre etiket üzerinde hiçbir tetikleyici hammadde köküne rastlamamıştır.",
+            "proofs": custom_proofs if custom_proofs else [
                 {"step": "01", "title": "Alerjen Kök Sözlük Taraması Temiz", "description": "Tetikleyici kelimeler taranmış ve hiçbir sakıncalı hammadde kökü bulunmamıştır."},
                 {"step": "02", "title": "Bileşen & Katkı Maddesi Filtresi Doğrulandı", "description": "Seçilen profil kapsamındaki tüm içerik ve E-kodları kurallara uygundur."}
             ],
-            "dietitian_note": "GlutenGuard Uzman Notu: Seçtiğiniz tüm alerjen profillerine göre rahatlıkla tüketebilirsiniz."
+            "dietitian_note": f"GlutenGuard Uzman Notu: {food_meta['name']} seçtiğiniz alerjen profillerine göre güvenlidir. Yine de restoran servis ve marinasyon detaylarına dikkat etmeniz önerilir."
         }
         memory_verdict = f"Tekrar Güvenle Tercih Edilebilir ({food_meta['category']})"
     else:
         trigger_summary = ", ".join([f"'{r['trigger_word']}'" for r in detected_risks]) if detected_risks else "Şüpheli İçerik"
-        
-        custom_proofs = []
-        if "components" in food_meta and food_meta["components"]:
-            for idx, comp in enumerate(food_meta["components"], 1):
-                custom_proofs.append({
-                    "step": f"0{idx}",
-                    "title": comp["item"],
-                    "description": comp["desc"]
-                })
-        else:
-            custom_proofs = [
-                {"step": "01", "title": "Doğrudan Tetikleyici Kelime Bulundu", "description": f"Etikette geçen {trigger_summary} sakıncalı madde listenizle doğrudan çelişmektedir."},
-                {"step": "02", "title": "Taksonomik Alerjen Kural İhlali", "description": "Ürün içeriği bağışıklık sisteminde alerjik reaksiyon tetikleme riski taşır."}
-            ]
 
         explanation = {
             "title": f"Bu {food_meta['name']} Aktif Alerjen Profiliniz İçin KESİNLİKLE RİSKLİ!",
             "summary": f"Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici maddeler ({trigger_summary}) ve gıda bileşen riskleri tespit edilmiştir.",
-            "proofs": custom_proofs,
+            "proofs": custom_proofs if custom_proofs else [
+                {"step": "01", "title": "Doğrudan Tetikleyici Kelime Bulundu", "description": f"Etikette geçen {trigger_summary} sakıncalı madde listenizle doğrudan çelişmektedir."},
+                {"step": "02", "title": "Taksonomik Alerjen Kural İhlali", "description": "Ürün içeriği bağışıklık sisteminde alerjik reaksiyon tetikleme riski taşır."}
+            ],
             "dietitian_note": f"GlutenGuard Uzman Uyarısı: KESİNLİKLE TÜKETMEYİNİZ! Ürün içeriğinde {trigger_summary} ve alerjen tetikleyici bileşenler bulunmaktadır."
         }
         names_short = ", ".join([r['trigger_word'].capitalize() for r in detected_risks[:2]]) if detected_risks else "Şüpheli İçerik"
@@ -1076,38 +1118,36 @@ async def analyze_ingredients(
     additive_warnings = analysis["additive_warnings"]
     is_safe = analysis["is_safe"]
 
+    custom_proofs_ing = []
+    if "components" in food_meta and food_meta["components"]:
+        for idx, comp in enumerate(food_meta["components"], 1):
+            custom_proofs_ing.append({
+                "step": f"0{idx}",
+                "title": comp["item"],
+                "description": comp["desc"]
+            })
+
     if is_safe:
         explanation = {
             "title": f"Bu {food_meta['name']} Seçili Alerjen Profiliniz İçin Güvenli mi?",
             "summary": "Yapay zeka analizimiz, aktifleştirdiğiniz alerjen profilinize göre etiket üzerinde hiçbir tetikleyici kök kelimeye rastlamamıştır.",
-            "proofs": [
+            "proofs": custom_proofs_ing if custom_proofs_ing else [
                 {"step": "01", "title": "Alerjen Kök Sözlük Taraması Temiz", "description": "Tetikleyici kelimeler taranmış ve hiçbir sakıncalı hammadde kökü bulunmamıştır."},
                 {"step": "02", "title": "Bileşen Filtresi Doğrulandı", "description": "Seçilen profil kapsamındaki tüm içerik kurallara uygundur."}
             ],
-            "dietitian_note": "GlutenGuard Uzman Notu: Seçtiğiniz tüm alerjen profillerine göre rahatlıkla tüketebilirsiniz."
+            "dietitian_note": f"GlutenGuard Uzman Notu: {food_meta['name']} seçtiğiniz alerjen profillerine göre rahatlıkla tüketilebilir."
         }
         memory_verdict = f"Tekrar Güvenle Tercih Edilebilir ({food_meta['category']})"
     else:
         trigger_summary = ", ".join([f"'{r['trigger_word']}'" for r in detected_risks]) if detected_risks else "Şüpheli İçerik"
-        
-        custom_proofs = []
-        if "components" in food_meta and food_meta["components"]:
-            for idx, comp in enumerate(food_meta["components"], 1):
-                custom_proofs.append({
-                    "step": f"0{idx}",
-                    "title": comp["item"],
-                    "description": comp["desc"]
-                })
-        else:
-            custom_proofs = [
-                {"step": "01", "title": "Doğrudan Tetikleyici Kelime Bulundu", "description": f"İçerik etiketinde tespit edilen {trigger_summary} sakıncalı hammadde listenizle doğrudan eşleşmektedir."},
-                {"step": "02", "title": "Alerjen Kök Sözlük İhlali", "description": "Taranan gıda içerik taksonomisi bağışıklık sisteminde reaksiyon riski oluşturmaktadır."}
-            ]
 
         explanation = {
             "title": f"Bu {food_meta['name']} Aktif Alerjen Profiliniz İçin KESİNLİKLE RİSKLİ!",
             "summary": f"Aktifleştirdiğiniz alerjen filtrelerine göre etiket üzerinde tetikleyici kelimeler ({trigger_summary}) ve gıda bileşen riskleri tespit edilmiştir.",
-            "proofs": custom_proofs,
+            "proofs": custom_proofs_ing if custom_proofs_ing else [
+                {"step": "01", "title": "Doğrudan Tetikleyici Kelime Bulundu", "description": f"İçerik etiketinde tespit edilen {trigger_summary} sakıncalı hammadde listenizle doğrudan eşleşmektedir."},
+                {"step": "02", "title": "Alerjen Kök Sözlük İhlali", "description": "Taranan gıda içerik taksonomisi bağışıklık sisteminde reaksiyon riski oluşturmaktadır."}
+            ],
             "dietitian_note": f"GlutenGuard Uzman Uyarısı: KESİNLİKLE TÜKETMEYİNİZ! Ürün içeriğinde {trigger_summary} ve alerjen tetikleyici bileşenler bulunmaktadır."
         }
         names_short = ", ".join([r['trigger_word'].capitalize() for r in detected_risks[:2]]) if detected_risks else "Şüpheli İçerik"

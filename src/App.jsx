@@ -338,6 +338,20 @@ const FOOD_TAKSONOMI_DATABASE = [
     ]
   },
 
+  // 4. TAZE ET & IZGARA YEMEKLERİ
+  {
+    id: "pirzola_biftek",
+    keywords: ["pirzola", "biftek", "antrikot", "bonfile", "steak", "ribeye", "t bone", "kuzu pirzola", "dana pirzola", "kulbasti"],
+    name: "Izgara Pirzola & Biftek Tabağı",
+    category: "Taze Et & Izgara Yemekleri",
+    icon: "🥩",
+    components: [
+      { item: "Saf Pirzola / Biftek Eti", desc: "%100 Doğal taze et ham haliyle Gliadin (Gluten) ve Laktoz içermez, tam güvenlidir." },
+      { item: "Marinasyon & Soya Sosu Riski", desc: "Et marine edilirken soya sosu (Gluten/Soya) veya hazır bulyon çeşnisi kullanıldıysa dikkat edilmelidir." },
+      { item: "Kızgın Tereyağı Cızbız", desc: "Pişirim aşamasında dökülen kızgın tereyağı laktoz ve süt proteini kazein barındırır." },
+      { item: "Izgara Pide Çapraz Bulaşması", desc: "Ortak ızgarada pide/lavaş ısıtıldıysa gluten bulaşma riski vardır." }
+    ]
+  },
   // 7. AMBALAJLI BİSKÜVİ, ÇİKOLATA, CİPS & İÇECEKLER
   {
     id: "cips_cerez",
@@ -400,15 +414,34 @@ const FOOD_TAKSONOMI_DATABASE = [
   }
 ];
 
+const LOCAL_FILLER_WORDS = new Set([
+  "pisirme", "yontem", "ve", "dereceleri", "nasil", "pisirilir", "hakkinda", "tarifi",
+  "resmi", "gorseli", "indir", "photo", "image", "scan", "pic", "dsc", "img", "frame",
+  "gorsel", "resim", "yapilir", "yapilisi", "kadar", "dakika", "kolay", "nefis", "yemek", "tarifleri"
+]);
+
 const cleanFilenameToTitleLocal = (filename) => {
-  if (!filename) return "Taranan Gıda Ürünü";
-  let name = filename.split('.')[0];
-  name = name.replace(/[-_.]+/g, ' ');
-  name = name.replace(/\b(photo|image|scan|pic|dsc|img|frame|gorsel|resim)\b/gi, '').trim();
-  if (name.length > 2) {
-    return name.charAt(0).toUpperCase() + name.slice(1) + " Ürünü";
+  if (!filename) return "Taranan Lezzet Ürünü";
+  const raw = filename.split('.')[0];
+  const clean = raw.replace(/[-_.]+/g, ' ').toLowerCase();
+
+  if (clean.includes("pirzola")) return "Izgara Pirzola Et Tabağı";
+  if (clean.includes("biftek") || clean.includes("antrikot") || clean.includes("bonfile") || clean.includes("steak")) return "Izgara Biftek / Antrikot Tabağı";
+  if (clean.includes("kofte")) return "Izgara Köfte Tabağı";
+  if (clean.includes("burger") || clean.includes("hamburger")) return "Hamburger / Cheeseburger Menü";
+  if (clean.includes("doner") || clean.includes("iskender")) return "Döner / İskender Dürüm";
+  if (clean.includes("pizza")) return "Pizza Çeşitleri";
+  if (clean.includes("lahmacun")) return "Çıtır Lahmacun";
+  if (clean.includes("pide")) return "Geleneksel Pide Çeşitleri";
+  if (clean.includes("borek") || clean.includes("pogaca")) return "Pastane Börek & Poğaça";
+  if (clean.includes("corba")) return "Çorba Çeşidi";
+
+  const words = clean.split(' ').filter(w => !LOCAL_FILLER_WORDS.has(w) && w.length > 1);
+  if (words.length > 0) {
+    const formatted = words.map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return `${formatted} Yemek Ürünü`;
   }
-  return "Taranan Ambalajlı Ürün";
+  return "Taranan Yemek Ürünü";
 };
 
 const inferDynamicFoodData = (text, fileName = "") => {
@@ -427,14 +460,14 @@ const inferDynamicFoodData = (text, fileName = "") => {
 
   const customTitle = cleanFilenameToTitleLocal(fileName);
   return {
-    category: "Ambalajlı İçerik & Atıştırmalık",
-    icon: "🍱",
+    category: "Taze Yemek & Yöresel Mutfak",
+    icon: "🍲",
     name: customTitle,
     components: [
-      { item: "Buğday Unu, Nişasta & Malt Ekstraktı", desc: "Gıda bağlayıcısı ve hacim artırıcı olarak buğday unu, modifiye nişasta (Gluten) kullanılabilir." },
-      { item: "Süt Tozu & Peynir Altı Suyu (Whey)", desc: "Aroma lezzeti için peynir altı suyu tozu ve süt proteini (Laktoz & Kazein) içerebilir." },
-      { item: "Soya Lesitini (E322) & Katkılar", desc: "Emülgatör olarak soya türevleri ve kıvam artırıcı E-kodları barındırabilir." },
-      { item: "Tesis Çapraz Bulaşma Uyarısı", desc: "Ortak imalat bandında fındık, fıstık, susam ve yumurta işlenme riski mevcuttur." }
+      { item: "Taze Et / Hammadde Doğallığı", desc: "Doğal işlenmemiş taze ürünler katkı ve gluten barındırmaz." },
+      { item: "Sote & Sos Marinasyonu", desc: "Yemek marinasyonunda soya sosu veya unlu sos bağlayıcılar eklenebilir." },
+      { item: "Kızartma & Tereyağı Yağı", desc: "Lezzetlendirmede kullanılan tereyağı laktoz ve süt proteini kazein içerir." },
+      { item: "Servis Pidesi & Çapraz Bulaşma", desc: "Restoran mutfağında unlu mamullerle ortak alanda hazırlanma riski mevcuttur." }
     ]
   };
 };
