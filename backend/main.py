@@ -576,22 +576,79 @@ FOOD_TAKSONOMI_DATABASE = [
         ]
     },
 
-    # 7. AMBALAJLI BİSKÜVİ, ÇİKOLATA & CİPSLER
+    # 7. AMBALAJLI BİSKÜVİ, ÇİKOLATA, CİPS & İÇECEKLER
     {
-        "id": "ambalajli_atistirmalik",
-        "keywords": ["biskuvi", "kraker", "gofret", "cikolata", "cips", "doritos", "ruffles", "lays", "oreo"],
-        "name": "Ambalajlı Atıştırmalık & Cips",
-        "category": "Atıştırmalık & Bisküvi",
+        "id": "cips_cerez",
+        "keywords": ["cips", "chips", "doritos", "ruffles", "lays", "cheetos", "pringles", "cerez", "kuruyemis"],
+        "name": "Çeşnili Cips & Çerez Atıştırmalık",
+        "category": "Cips & Çerez",
+        "icon": "🍿",
+        "components": [
+            {"item": "Çeşni Bağlayıcı Nişasta", "risk": "gluten", "desc": "Aroma çeşnilerinde buğday unu veya modifiye nişasta (Gluten) kullanılabilir."},
+            {"item": "Peynir Altı Suyu Tozu (Whey)", "risk": "lactose", "desc": "Çeşni lezzetlendiricisi olarak peynir altı suyu tozu (Laktoz) eklenir."},
+            {"item": "MSG & Lezzet Artırıcılar (E621)", "risk": "additive", "desc": "Monosodyum glutamat ve aroma artırıcı katkı maddeleri barındırabilir."}
+        ]
+    },
+    {
+        "id": "cikolata_bar",
+        "keywords": ["cikolata", "chocolate", "gofret", "wafer", "eti", "ulker", "nestle", "milka", "snickers", "twix", "tadelle", "metro", "bar"],
+        "name": "Çikolata & Gofret Bar",
+        "category": "Çikolata & Atıştırmalık Bar",
+        "icon": "🍫",
+        "components": [
+            {"item": "Süt Yağı & Süt Tozu", "risk": "lactose", "desc": "Yüksek oranda süt proteini (Kazein) ve laktoz barındırır."},
+            {"item": "Buğday Unu (Gofret Yaprağı)", "risk": "gluten", "desc": "Çıtır gofret katmanları buğday unu (Gluten) içerir."},
+            {"item": "Soya Lesitini (E322)", "risk": "soy", "desc": "Çikolata emülsiyonunda soya lesitini kullanılır."},
+            {"item": "Fındık / Fıstık İçi & Eser Miktar", "risk": "nuts", "desc": "Fındık, antep fıstığı veya iz miktarda kabuklu meyve alerjenleri içerir."}
+        ]
+    },
+    {
+        "id": "biskuvi_kek",
+        "keywords": ["kraker", "cracker", "biskuvi", "biscuit", "kek", "cake", "browni", "kurabiye", "crax", "tutku", "benimo", "hanimeller", "negro", "biscrem", "biskrem"],
+        "name": "Bisküvi, Kraker & Kek",
+        "category": "Bisküvi & Pastane Atıştırmalık",
         "icon": "🍪",
         "components": [
-            {"item": "Buğday Unu & Gliadin", "risk": "gluten", "desc": "Unlu atıştırmalıkların tümü gluten barındırır."},
-            {"item": "Peynir Altı Suyu Tozu (Whey)", "risk": "lactose", "desc": "Aroma artırıcı olarak laktoz ve whey eklenir."},
-            {"item": "Soya Lesitini (E322)", "risk": "soy", "desc": "Emülgatör olarak soya lesitini kullanılır."}
+            {"item": "Buğday Unu & Gliadin", "risk": "gluten", "desc": "Hamurun ana bileşeni glutenli buğday unudur."},
+            {"item": "Peynir Altı Suyu (Whey) & Süt", "risk": "lactose", "desc": "Laktoz ve süt tozu aroma bileşenleri barındırır."},
+            {"item": "Yumurta Albümini", "risk": "egg", "desc": "Kek ve bisküvi yapısında emülgatör yumurta akı yer alır."}
+        ]
+    },
+    {
+        "id": "noodle_makarna",
+        "keywords": ["noodle", "makarna", "indomie", "knorr", "maggi", "sos", "ketcap", "mayonez", "salca", "hardal"],
+        "name": "Hazır Noodle, Makarna & Sos",
+        "category": "Noodle, Makarna & Çeşni",
+        "icon": "🍜",
+        "components": [
+            {"item": "Durum Buğdayı İrmiği / Unu", "risk": "gluten", "desc": "Noodle ve makarna %100 durum buğday irmiği (Gluten) içerir."},
+            {"item": "Çeşni Paketi & MSG", "risk": "gluten_additive", "desc": "Çeşni tozunda buğday unu, koruyucular ve monosodyum glutamat bulunur."}
+        ]
+    },
+    {
+        "id": "icecek_sut",
+        "keywords": ["icecek", "drink", "sut", "milk", "meyve suyu", "kola", "fanta", "sprite", "fuse tea", "icetea", "smoothie", "kahve"],
+        "name": "İçecek & Sütlü İçecek",
+        "category": "İçecek & Süt Ürünleri",
+        "icon": "🥤",
+        "components": [
+            {"item": "Süt & Laktoz", "risk": "lactose", "desc": "Aromalı sütlerde yüksek laktoz oranı bulunur."},
+            {"item": "Karamel Renklendirici (E150d)", "risk": "gluten", "desc": "Kola ve soğuk çaylarda arpa maltından elde edilen karamel renklendirici bulunabilir."}
         ]
     }
 ]
 
-def infer_food_name_and_category(norm_text: str) -> dict:
+def clean_filename_to_title(filename: str) -> str:
+    if not filename:
+        return "Taranan Gıda Ürünü"
+    name = os.path.splitext(filename)[0]
+    name = re.sub(r'[-_.]+', ' ', name)
+    name = re.sub(r'\b(photo|image|scan|pic|dsc|img|frame|gorsel|resim)\b', '', name, flags=re.IGNORECASE).strip()
+    if len(name) > 2:
+        return name.title() + " Ürünü"
+    return "Taranan Ambalajlı Ürün"
+
+def infer_food_name_and_category(norm_text: str, filename: str = "") -> dict:
     for entry in FOOD_TAKSONOMI_DATABASE:
         if any(k in norm_text for k in entry["keywords"]):
             return {
@@ -601,7 +658,18 @@ def infer_food_name_and_category(norm_text: str) -> dict:
                 "components": entry["components"]
             }
 
-    return {"name": "Ambalajlı Paketli Gıda", "category": "Ambalajlı Paketli Gıda", "icon": "📦"}
+    custom_title = clean_filename_to_title(filename)
+    return {
+        "name": custom_title,
+        "category": "Ambalajlı İçerik & Atıştırmalık",
+        "icon": "🍱",
+        "components": [
+            {"item": "Buğday Unu, Nişasta & Malt Ekstraktı", "risk": "gluten", "desc": "Gıda bağlayıcısı ve hacim artırıcı olarak buğday unu, modifiye nişasta (Gluten) kullanılabilir."},
+            {"item": "Süt Tozu & Peynir Altı Suyu (Whey)", "risk": "lactose", "desc": "Aroma lezzeti için peynir altı suyu tozu ve süt proteini (Laktoz & Kazein) içerebilir."},
+            {"item": "Soya Lesitini (E322) & Katkılar", "risk": "soy", "desc": "Emülgatör olarak soya türevleri ve kıvam artırıcı E-kodları barındırabilir."},
+            {"item": "Tesis Çapraz Bulaşma Uyarısı", "risk": "cross_contamination", "desc": "Ortak imalat bandında fındık, fıstık, susam ve yumurta işlenme riski mevcuttur."}
+        ]
+    }
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 3. Seed Initial Database Products & Additives
@@ -901,11 +969,11 @@ async def analyze_base64(
         else:
             raw_text = extract_text_from_image(image_bytes, filename=fname)
             analysis = analyze_ingredients_text(raw_text, fname, user_allergies)
-            food_meta = infer_food_name_and_category(analysis["norm_text"])
+            food_meta = infer_food_name_and_category(analysis["norm_text"], filename=fname)
     else:
         raw_text = extract_text_from_image(image_bytes, filename=fname)
         analysis = analyze_ingredients_text(raw_text, fname, user_allergies)
-        food_meta = infer_food_name_and_category(analysis["norm_text"])
+        food_meta = infer_food_name_and_category(analysis["norm_text"], filename=fname)
 
     detected_risks = analysis["detected_risks"]
     cross_warnings = analysis["cross_contamination_warnings"]
@@ -1001,7 +1069,7 @@ async def analyze_ingredients(
     fname = file.filename or ""
     raw_text = extract_text_from_image(image_bytes, filename=fname)
     analysis = analyze_ingredients_text(raw_text, fname, user_allergies)
-    food_meta = infer_food_name_and_category(analysis["norm_text"])
+    food_meta = infer_food_name_and_category(analysis["norm_text"], filename=fname)
 
     detected_risks = analysis["detected_risks"]
     cross_warnings = analysis["cross_contamination_warnings"]

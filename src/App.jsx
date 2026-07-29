@@ -338,20 +338,78 @@ const FOOD_TAKSONOMI_DATABASE = [
     ]
   },
 
-  // 7. AMBALAJLI BİSKÜVİ, ÇİKOLATA & CİPSLER
+  // 7. AMBALAJLI BİSKÜVİ, ÇİKOLATA, CİPS & İÇECEKLER
   {
-    id: "ambalajli_atistirmalik",
-    keywords: ["biskuvi", "kraker", "gofret", "cikolata", "cips", "doritos", "ruffles", "lays", "oreo"],
-    name: "Ambalajlı Atıştırmalık & Cips",
-    category: "Atıştırmalık & Bisküvi",
+    id: "cips_cerez",
+    keywords: ["cips", "chips", "doritos", "ruffles", "lays", "cheetos", "pringles", "cerez", "kuruyemis"],
+    name: "Çeşnili Cips & Çerez Atıştırmalık",
+    category: "Cips & Çerez",
+    icon: "🍿",
+    components: [
+      { item: "Çeşni Bağlayıcı Nişasta", desc: "Aroma çeşnilerinde buğday unu veya modifiye nişasta (Gluten) kullanılabilir." },
+      { item: "Peynir Altı Suyu Tozu (Whey)", desc: "Çeşni lezzetlendiricisi olarak peynir altı suyu tozu (Laktoz) eklenir." },
+      { item: "MSG & Lezzet Artırıcılar (E621)", desc: "Monosodyum glutamat ve aroma artırıcı katkı maddeleri barındırabilir." }
+    ]
+  },
+  {
+    id: "cikolata_bar",
+    keywords: ["cikolata", "chocolate", "gofret", "wafer", "eti", "ulker", "nestle", "milka", "snickers", "twix", "tadelle", "metro", "bar"],
+    name: "Çikolata & Gofret Bar",
+    category: "Çikolata & Atıştırmalık Bar",
+    icon: "🍫",
+    components: [
+      { item: "Süt Yağı & Süt Tozu", desc: "Yüksek oranda süt proteini (Kazein) ve laktoz barındırır." },
+      { item: "Buğday Unu (Gofret Yaprağı)", desc: "Çıtır gofret katmanları buğday unu (Gluten) içerir." },
+      { item: "Soya Lesitini (E322)", desc: "Çikolata emülsiyonunda soya lesitini kullanılır." },
+      { item: "Fındık / Fıstık İçi & Eser Miktar", desc: "Fındık, antep fıstığı veya iz miktarda kabuklu meyve alerjenleri içerir." }
+    ]
+  },
+  {
+    id: "biskuvi_kek",
+    keywords: ["kraker", "cracker", "biskuvi", "biscuit", "kek", "cake", "browni", "kurabiye", "crax", "tutku", "benimo", "hanimeller", "negro", "biscrem", "biskrem"],
+    name: "Bisküvi, Kraker & Kek",
+    category: "Bisküvi & Pastane Atıştırmalık",
     icon: "🍪",
     components: [
-      { item: "Buğday Unu & Gliadin", desc: "Unlu atıştırmalıkların tümü gluten barındırır." },
-      { item: "Peynir Altı Suyu Tozu (Whey)", desc: "Aroma artırıcı olarak laktoz ve whey eklenir." },
-      { item: "Soya Lesitini (E322)", desc: "Emülgatör olarak soya lesitini kullanılır." }
+      { item: "Buğday Unu & Gliadin", desc: "Hamurun ana bileşeni glutenli buğday unudur." },
+      { item: "Peynir Altı Suyu (Whey) & Süt", desc: "Laktoz ve süt tozu aroma bileşenleri barındırır." },
+      { item: "Yumurta Albümini", desc: "Kek ve bisküvi yapısında emülgatör yumurta akı yer alır." }
+    ]
+  },
+  {
+    id: "noodle_makarna",
+    keywords: ["noodle", "makarna", "indomie", "knorr", "maggi", "sos", "ketcap", "mayonez", "salca", "hardal"],
+    name: "Hazır Noodle, Makarna & Sos",
+    category: "Noodle, Makarna & Çeşni",
+    icon: "🍜",
+    components: [
+      { item: "Durum Buğdayı İrmiği / Unu", desc: "Noodle ve makarna %100 durum buğday irmiği (Gluten) içerir." },
+      { item: "Çeşni Paketi & MSG", desc: "Çeşni tozunda buğday unu, koruyucular ve monosodyum glutamat bulunur." }
+    ]
+  },
+  {
+    id: "icecek_sut",
+    keywords: ["icecek", "drink", "sut", "milk", "meyve suyu", "kola", "fanta", "sprite", "fuse tea", "icetea", "smoothie", "kahve"],
+    name: "İçecek & Sütlü İçecek",
+    category: "İçecek & Süt Ürünleri",
+    icon: "🥤",
+    components: [
+      { item: "Süt & Laktoz", desc: "Aromalı sütlerde yüksek laktoz oranı bulunur." },
+      { item: "Karamel Renklendirici (E150d)", desc: "Kola ve soğuk çaylarda arpa maltından elde edilen karamel renklendirici bulunabilir." }
     ]
   }
 ];
+
+const cleanFilenameToTitleLocal = (filename) => {
+  if (!filename) return "Taranan Gıda Ürünü";
+  let name = filename.split('.')[0];
+  name = name.replace(/[-_.]+/g, ' ');
+  name = name.replace(/\b(photo|image|scan|pic|dsc|img|frame|gorsel|resim)\b/gi, '').trim();
+  if (name.length > 2) {
+    return name.charAt(0).toUpperCase() + name.slice(1) + " Ürünü";
+  }
+  return "Taranan Ambalajlı Ürün";
+};
 
 const inferDynamicFoodData = (text, fileName = "") => {
   const norm = normalizeLocalText(text + " " + fileName);
@@ -367,7 +425,18 @@ const inferDynamicFoodData = (text, fileName = "") => {
     }
   }
 
-  return { category: "Ambalajlı Paketli Gıda", icon: "📦", name: fileName ? fileName.split('.')[0].toUpperCase() : "Yüklenen Paket Gıda" };
+  const customTitle = cleanFilenameToTitleLocal(fileName);
+  return {
+    category: "Ambalajlı İçerik & Atıştırmalık",
+    icon: "🍱",
+    name: customTitle,
+    components: [
+      { item: "Buğday Unu, Nişasta & Malt Ekstraktı", desc: "Gıda bağlayıcısı ve hacim artırıcı olarak buğday unu, modifiye nişasta (Gluten) kullanılabilir." },
+      { item: "Süt Tozu & Peynir Altı Suyu (Whey)", desc: "Aroma lezzeti için peynir altı suyu tozu ve süt proteini (Laktoz & Kazein) içerebilir." },
+      { item: "Soya Lesitini (E322) & Katkılar", desc: "Emülgatör olarak soya türevleri ve kıvam artırıcı E-kodları barındırabilir." },
+      { item: "Tesis Çapraz Bulaşma Uyarısı", desc: "Ortak imalat bandında fındık, fıstık, susam ve yumurta işlenme riski mevcuttur." }
+    ]
+  };
 };
 
 export const App = () => {
